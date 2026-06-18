@@ -1,0 +1,64 @@
+﻿Código,Empresa,Instrumento,fecha_corte,tipo_informe,SCI,SRI,Cuadrante,IRL CRL,IRL TRL,IRL BRL,IRL IPRL,IRL TMRL,IRL FRL,Eslabón más débil IRL,origen
+CV-1001,Nodo Biotech SpA,Crea y Valida,2025-07-12,Informe Avance,2.34,3.02,En construcción,2,4,1,2,5,2,BRL (1),demo
+CV-1001,Nodo Biotech SpA,Crea y Valida,2025-10-10,Informe Avance,2.71,3.49,En construcción,2,5,2,2,6,2,CRL (2),demo
+CV-1001,Nodo Biotech SpA,Crea y Valida,2026-01-08,Informe Final,3.30,4.25,Resultados sin base,3,6,2,3,7,3,BRL (2),demo
+CV-1002,Vértice Energía SpA,Crea y Valida,2025-10-15,Informe Avance,2.68,2.37,En construcción,4,4,5,2,4,1,FRL (1),demo
+CV-1002,Vértice Energía SpA,Crea y Valida,2026-01-13,Informe Avance,3.01,2.67,En construcción,5,5,6,2,5,2,IPRL (2),demo
+CV-1002,Vértice Energía SpA,Crea y Valida,2026-04-13,Informe Final,3.65,3.23,Potencial latente,6,6,7,3,6,2,FRL (2),demo
+CVC-1003,Brújula Analytics SpA,Crea y Valida,2025-08-20,Informe Avance,2.76,2.9,En construcción,2,5,2,2,5,2,CRL (2),demo
+CVC-1003,Brújula Analytics SpA,Crea y Valida,2025-11-18,Informe Avance,3.02,3.17,En construcción,2,5,2,2,6,2,CRL (2),demo
+CVC-1003,Brújula Analytics SpA,Crea y Valida,2026-02-16,Informe Final,3.65,3.83,Innovadores consolidados,3,6,2,2,7,3,BRL (2),demo
+CVC-1011,Júpiter Clean SpA,Crea y Valida,2025-07-16,Informe Avance,1.19,1.56,En construcción,2,3,1,1,2,1,BRL (1),demo
+CVC-1011,Júpiter Clean SpA,Crea y Valida,2025-10-14,Informe Avance,1.38,1.81,En construcción,3,3,2,2,3,2,BRL (2),demo
+CVC-1011,Júpiter Clean SpA,Crea y Valida,2026-01-12,Informe Hito,1.65,2.17,En construcción,3,4,2,2,3,2,BRL (2),demo
+CVC-1012,Kelpia Marina SpA,Crea y Valida,2025-08-01,Informe Avance,2.04,2.39,En construcción,2,4,1,1,6,1,BRL (1),demo
+CVC-1012,Kelpia Marina SpA,Crea y Valida,2025-10-30,Informe Avance,2.38,2.78,En construcción,3,4,2,2,6,2,BRL (2),demo
+CVC-1012,Kelpia Marina SpA,Crea y Valida,2026-01-28,Informe Hito,2.85,3.33,En construcción,3,5,2,2,5,2,BRL (2),demo
+CVCS-1013,Lumen Óptica SpA,Crea y Valida,2025-08-08,Informe Avance,2.46,2.74,En construcción,4,4,4,1,4,1,IPRL (1),demo
+CVCS-1013,Lumen Óptica SpA,Crea y Valida,2025-11-06,Informe Avance,2.98,3.32,En construcción,5,4,5,2,5,2,IPRL (2),demo
+CVCS-1013,Lumen Óptica SpA,Crea y Valida,2026-02-04,Informe Avance 1,3.50,3.90,Innovadores consolidados,6,5,6,2,6,2,IPRL (2),demo
+CVI-1004,Cantera Robótica SpA,Crea y Valida,2025-09-26,Informe Avance,2.09,2.46,En construcción,2,4,1,4,4,2,BRL (1),demo
+CVI-1004,Cantera Robótica SpA,Crea y Valida,2025-12-25,Informe Avance,2.3,2.71,En construcción,2,5,2,4,4,2,CRL (2),demo
+CVI-1004,Cantera Robótica SpA,Crea y Valida,2026-03-25,Informe Final,2.80,3.30,En construcción,3,6,2,5,5,3,BRL (2),demo
+CVI-1005,Delta Acuícola SpA,Crea y Valida,2025-09-19,Informe Avance,3.14,3.02,En construcción,2,5,1,4,9,3,BRL (1),demo
+CVI-1005,Delta Acuícola SpA,Crea y Valida,2025-12-18,Informe Avance,3.64,3.49,Potencial latente,3,6,2,4,9,3,BRL (2),demo
+CVI-1005,Delta Acuícola SpA,Crea y Valida,2026-03-18,Informe Final,4.30,4.13,Innovadores consolidados,3,7,2,5,8,4,BRL (2),demo
+CVI-1006,Ember Sensores SpA,Crea y Valida,2025-08-28,Informe Avance,2.31,2.69,En construcción,2,4,1,1,4,1,BRL (1),demo
+CVI-1006,Ember Sensores SpA,Crea y Valida,2025-11-26,Informe Avance,2.54,2.97,En construcción,2,4,2,2,5,2,CRL (2),demo
+CVI-1006,Ember Sensores SpA,Crea y Valida,2026-02-24,Informe Final,3.10,3.62,Resultados sin base,3,5,2,2,6,2,BRL (2),demo
+CVI-1007,Fractal Salud SpA,Crea y Valida,2025-08-01,Informe Avance,2.97,3.09,En construcción,4,5,3,4,6,2,FRL (2),demo
+CVI-1007,Fractal Salud SpA,Crea y Valida,2025-10-30,Informe Avance,3.64,3.8,Innovadores consolidados,4,6,3,4,7,3,BRL (3),demo
+CVI-1007,Fractal Salud SpA,Crea y Valida,2026-01-28,Informe Final,4.20,4.38,Innovadores consolidados,5,7,4,5,8,3,FRL (3),demo
+CVI-1014,Magma Industrial SpA,Crea y Valida,2025-07-31,Informe Avance,2.4,2.89,En construcción,4,5,5,1,4,2,IPRL (1),demo
+CVI-1014,Magma Industrial SpA,Crea y Valida,2025-10-29,Informe Avance,2.77,3.32,En construcción,4,6,5,2,5,3,IPRL (2),demo
+CVI-1014,Magma Industrial SpA,Crea y Valida,2026-01-27,Informe Avance 1,3.25,3.90,Resultados sin base,5,7,4,2,6,3,IPRL (2),demo
+CVI-1015,Nimbo Cloud SpA,Crea y Valida,2025-08-20,Informe Avance,1.84,2.24,En construcción,2,4,1,1,4,2,BRL (1),demo
+CVI-1015,Nimbo Cloud SpA,Crea y Valida,2025-11-18,Informe Avance,2.18,2.64,En construcción,3,4,2,2,4,3,BRL (2),demo
+CVI-1015,Nimbo Cloud SpA,Crea y Valida,2026-02-16,Informe Avance 1,2.50,3.03,En construcción,3,5,2,2,5,3,BRL (2),demo
+CVI-1016,Orbita Logística SpA,Crea y Valida,2025-09-03,Informe Avance,2.76,2.6,En construcción,2,4,1,4,4,2,BRL (1),demo
+CVI-1016,Orbita Logística SpA,Crea y Valida,2025-12-02,Informe Avance,3.24,3.06,En construcción,3,5,2,4,5,3,BRL (2),demo
+CVI-1016,Orbita Logística SpA,Crea y Valida,2026-03-02,Informe Hito,3.75,3.54,Innovadores consolidados,3,6,2,5,6,3,BRL (2),demo
+CVI-1017,Pampa Hídrica SpA,Crea y Valida,2025-07-30,Informe Avance,1.79,2.57,En construcción,2,4,1,2,4,1,BRL (1),demo
+CVI-1017,Pampa Hídrica SpA,Crea y Valida,2025-10-28,Informe Avance,2.08,2.99,En construcción,2,4,2,2,4,2,CRL (2),demo
+CVI-1017,Pampa Hídrica SpA,Crea y Valida,2026-01-26,Informe Avance 1,2.50,3.59,Resultados sin base,3,5,2,3,5,2,BRL (2),demo
+CVZ-1008,Granito Software SpA,Crea y Valida,2025-07-20,Informe Avance,1.89,2.48,En construcción,2,3,2,2,4,2,CRL (2),demo
+CVZ-1008,Granito Software SpA,Crea y Valida,2025-10-18,Informe Avance,2.15,2.81,En construcción,3,3,2,2,4,2,BRL (2),demo
+CVZ-1008,Granito Software SpA,Crea y Valida,2026-01-16,Informe Avance 1,2.50,3.27,En construcción,3,4,2,2,5,2,BRL (2),demo
+CYE-1020,Sílice Avanzada SpA,Consolida y Expande,2025-08-01,Informe Avance,2.38,2.76,En construcción,2,5,2,6,4,2,CRL (2),demo
+CYE-1020,Sílice Avanzada SpA,Consolida y Expande,2025-10-30,Informe Avance,2.63,3.05,En construcción,3,6,2,7,4,2,BRL (2),demo
+CYE-1020,Sílice Avanzada SpA,Consolida y Expande,2026-01-28,Informe Hito,3.15,3.65,Resultados sin base,3,7,2,8,5,2,BRL (2),demo
+EURE-1009,Hélice Agro SpA,Eureka,2025-07-24,Informe Avance,2.22,2.75,En construcción,2,5,1,1,4,1,BRL (1),demo
+EURE-1009,Hélice Agro SpA,Eureka,2025-10-22,Informe Avance,2.56,3.16,En construcción,3,6,2,2,5,2,BRL (2),demo
+EURE-1009,Hélice Agro SpA,Eureka,2026-01-20,Informe Final,3.05,3.77,Resultados sin base,3,7,2,2,6,2,BRL (2),demo
+IAT-1000,Aurora Materiales SpA,Innova Alta Tecnología,2025-08-02,Informe Avance,2.84,3.02,En construcción,2,5,1,4,5,3,BRL (1),demo
+IAT-1000,Aurora Materiales SpA,Innova Alta Tecnología,2025-10-31,Informe Avance,3.36,3.58,Resultados sin base,3,6,2,4,6,3,BRL (2),demo
+IAT-1000,Aurora Materiales SpA,Innova Alta Tecnología,2026-01-29,Informe Final,3.85,4.10,Innovadores consolidados,3,7,2,5,7,4,BRL (2),demo
+IAT-1018,Quásar Devices SpA,Innova Alta Tecnología,2025-07-24,Informe Avance,2.17,2.31,En construcción,2,3,1,1,5,1,BRL (1),demo
+IAT-1018,Quásar Devices SpA,Innova Alta Tecnología,2025-10-22,Informe Avance,2.59,2.75,En construcción,3,3,2,2,6,2,BRL (2),demo
+IAT-1018,Quásar Devices SpA,Innova Alta Tecnología,2026-01-20,Informe Avance 1,3.00,3.19,En construcción,3,4,2,2,7,2,BRL (2),demo
+IAT-1019,Raíz Circular SpA,Innova Alta Tecnología,2025-07-27,Informe Avance,2.71,2.95,En construcción,7,4,4,4,5,1,FRL (1),demo
+IAT-1019,Raíz Circular SpA,Innova Alta Tecnología,2025-10-25,Informe Avance,3.22,3.5,Resultados sin base,7,5,5,4,6,2,FRL (2),demo
+IAT-1019,Raíz Circular SpA,Innova Alta Tecnología,2026-01-23,Informe Avance 2,3.70,4.02,Innovadores consolidados,6,6,6,5,7,2,FRL (2),demo
+IATS-1010,Ístmica Minería SpA,Innova Alta Tecnología,2025-10-12,Informe Avance,1.93,2.04,En construcción,2,4,2,2,4,4,CRL (2),demo
+IATS-1010,Ístmica Minería SpA,Innova Alta Tecnología,2026-01-10,Informe Avance,2.15,2.26,En construcción,3,4,2,2,4,4,BRL (2),demo
+IATS-1010,Ístmica Minería SpA,Innova Alta Tecnología,2026-04-10,Informe Avance 3,2.55,2.69,En construcción,3,5,2,2,5,5,BRL (2),demo

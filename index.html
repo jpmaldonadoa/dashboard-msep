@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MSEP — Portafolio CORFO</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-container-low": "#f3f4f5",
+        "surface-container": "#edeeef",
+        "on-surface-variant": "#45464f",
+        "surface": "#f8f9fa",
+        "error": "#ba1a1a",
+        "outline": "#767680",
+        "outline-variant": "#c6c5d0",
+        "on-primary": "#ffffff",
+        "secondary-container": "#a0f1eb",
+        "surface-container-high": "#e7e8e9",
+        "on-secondary-container": "#12706c",
+        "on-tertiary-container": "#dd786e",
+        "primary-fixed-dim": "#b6c4ff",
+        "primary-fixed": "#dce1ff",
+        "tertiary-container": "#591410",
+        "surface-container-highest": "#e1e2e4",
+        "surface-container-lowest": "#ffffff",
+        "on-surface": "#191c1d",
+        "on-secondary": "#ffffff",
+        "on-primary-container": "#8492ca",
+        "background": "#f8f9fa",
+        "secondary": "#036a66",
+        "primary": "#021446",
+        "secondary-fixed": "#a0f1eb",
+        "primary-container": "#1b2a5b",
+        "surface-variant": "#e1e2e4",
+        "surface-bright": "#f8f9fa",
+        "secondary-fixed-dim": "#84d4cf"
+      },
+      borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+      fontFamily: { headline: ["Manrope"], body: ["Inter"], label: ["Inter"] }
+    }
+  }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .font-headline, h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .upload-zone-dots {
+    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%23021446FF' stroke-width='2' stroke-dasharray='12%2c 16' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    border-radius: 12px;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .score-low  { background-color:#fee2e2;color:#991b1b; }
+  .score-mid-low { background-color:#fef3c7;color:#92400e; }
+  .score-mid-high { background-color:#d1fae5;color:#065f46; }
+  .score-high { background-color:#a7f3d0;color:#064e3b; }
+  .drag-over { background-color:rgba(2,20,70,.08)!important; }
+  .tab-btn { background: none; border: none; cursor: pointer; }
+  .tab-btn.active { color:#021446; border-bottom:2px solid #021446; padding-bottom:4px; font-weight:600; }
+  .tab-btn.inactive { color:#64748b; }
+  .tab-btn.inactive:hover { color:#021446; }
+</style>
+</head>
+<body class="bg-surface text-on-surface">
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center gap-4">
+  <div class="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+  <p class="font-headline font-semibold text-primary">Cargando datos del portafolio...</p>
+  <p class="text-xs text-on-surface-variant">Conectando con Google Sheets…</p>
+</div>
+
+<!-- Upload Modal -->
+<div id="upload-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] hidden items-center justify-center p-6">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
+    <div class="flex justify-between items-center p-6 border-b border-slate-100">
+      <h2 class="font-headline font-bold text-xl text-primary">Cargar datos del portafolio</h2>
+      <button onclick="closeUploadModal()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+        <span class="material-symbols-outlined text-slate-500">close</span>
+      </button>
+    </div>
+    <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div id="drop-zone" class="upload-zone-dots flex flex-col items-center justify-center text-center p-10 cursor-pointer hover:bg-primary/5 transition-all" onclick="document.getElementById('file-input').click()">
+        <div class="mb-4 p-4 bg-primary-fixed rounded-full text-primary">
+          <span class="material-symbols-outlined text-4xl" style="font-variation-settings:'wght' 200">upload_file</span>
+        </div>
+        <h3 class="font-headline font-semibold text-primary mb-1">Arrastra tu CSV aquí</h3>
+        <p class="text-xs text-on-surface-variant mb-6">o haz clic para seleccionar</p>
+        <input type="file" id="file-input" accept=".csv" class="hidden" onchange="handleFileInput(event)"/>
+        <button class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all pointer-events-none">Seleccionar archivo</button>
+      </div>
+      <div class="space-y-4">
+        <div class="bg-surface-container-low p-4 rounded-xl border-l-4 border-primary">
+          <h4 class="font-headline font-bold text-primary text-sm mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">info</span>Requisitos
+          </h4>
+          <ul class="space-y-2 text-xs text-on-surface-variant">
+            <li class="flex gap-2"><span class="material-symbols-outlined text-secondary text-sm">check_circle</span>Columnas: Código, Empresa, SCI, SRI, C1-C5, etc.</li>
+            <li class="flex gap-2"><span class="material-symbols-outlined text-secondary text-sm">check_circle</span>Codificación UTF-8</li>
+            <li class="flex gap-2"><span class="material-symbols-outlined text-secondary text-sm">check_circle</span>Delimitador: coma o punto y coma (auto-detección)</li>
+          </ul>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-xl">
+          <h4 class="font-headline font-bold text-primary text-sm mb-2">Cargar desde Google Sheets</h4>
+          <p class="text-xs text-on-surface-variant mb-3">Reintenta la carga automática desde la fuente oficial.</p>
+          <button onclick="loadFromSheets()" class="w-full bg-primary text-white text-xs font-bold uppercase tracking-widest py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm">cloud_download</span>Cargar desde Sheets
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="bg-white/70 backdrop-blur-xl top-0 z-50 sticky border-b border-slate-100">
+  <div class="flex justify-between items-center w-full max-w-[1280px] mx-auto px-6 h-16">
+    <div class="flex items-center gap-8">
+      <span class="text-lg font-bold tracking-tight text-primary font-headline">MSEP — Portafolio CORFO</span>
+      <nav class="hidden md:flex gap-1 items-center h-full">
+        <button data-tab="dashboard" class="tab-btn active font-headline text-sm px-3 py-1">Dashboard Ejecutivo</button>
+        <button data-tab="matriz" class="tab-btn inactive font-headline text-sm px-3 py-1">Matriz Comparativa</button>
+        <button data-tab="cuadrantes" class="tab-btn inactive font-headline text-sm px-3 py-1">Cuadrantes SCI×SRI</button>
+        <button data-tab="madurez" class="tab-btn inactive font-headline text-sm px-3 py-1">Madurez IRL</button>
+        <button data-tab="ficha" class="tab-btn inactive font-headline text-sm px-3 py-1">Ficha de Proyecto</button>
+      </nav>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="data-source-badge" class="text-xs font-medium px-2 py-1 rounded-full hidden"></span>
+      <button onclick="openUploadModal()" class="p-2 rounded-full hover:bg-slate-50 transition-all text-slate-500" title="Cargar CSV">
+        <span class="material-symbols-outlined">upload_file</span>
+      </button>
+      <button onclick="loadFromSheets()" class="p-2 rounded-full hover:bg-slate-50 transition-all text-slate-500" title="Recargar desde Sheets">
+        <span class="material-symbols-outlined">sync</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1280px] mx-auto px-6 py-10">
+
+<!-- ===================== TAB 1: DASHBOARD ===================== -->
+<div id="tab-dashboard" class="tab-content active space-y-10">
+  <section class="flex flex-col md:flex-row justify-between items-end gap-6">
+    <div class="space-y-1">
+      <h1 class="text-4xl font-extrabold font-headline text-primary tracking-tight">Estado de Portafolio</h1>
+      <p class="text-on-surface-variant max-w-xl">Visualización agregada de indicadores de innovación para el portafolio activo CORFO.</p>
+    </div>
+  </section>
+
+  <!-- KPIs -->
+  <section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary">
+      <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">Proyectos Activos</p>
+      <div class="flex items-baseline gap-2">
+        <span id="kpi-activos" class="text-3xl font-bold font-headline text-primary">—</span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl">
+      <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">SCI Promedio</p>
+      <div class="flex items-baseline gap-2">
+        <span id="kpi-sci" class="text-3xl font-bold font-headline text-primary">—</span>
+        <span class="text-on-surface-variant text-xs">/ 5.0</span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl">
+      <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">SRI Promedio</p>
+      <div class="flex items-baseline gap-2">
+        <span id="kpi-sri" class="text-3xl font-bold font-headline text-primary">—</span>
+        <span class="text-on-surface-variant text-xs">/ 5.0</span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl">
+      <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">Brecha Promedio</p>
+      <div class="flex items-baseline gap-2">
+        <span id="kpi-brecha" class="text-3xl font-bold font-headline text-secondary">—</span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-2 border-error/20">
+      <p class="text-xs font-semibold text-error uppercase tracking-wider mb-2">Riesgo BG Alto</p>
+      <div class="flex items-baseline gap-2">
+        <span id="kpi-riesgo" class="text-3xl font-bold font-headline text-error">—</span>
+        <span class="text-error/70 text-xs font-medium">proyectos</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts row 1 -->
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-xl text-primary mb-6">Distribución por Estado</h3>
+      <div style="height:260px;position:relative"><canvas id="chart-estado"></canvas></div>
+    </div>
+    <div class="lg:col-span-5 bg-surface-container-lowest p-8 rounded-xl flex flex-col">
+      <h3 class="font-headline font-bold text-xl text-primary mb-6">Distribución por Instrumento</h3>
+      <div style="height:260px;position:relative"><canvas id="chart-instrumento"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Charts row 2 -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10">
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-xl text-primary mb-6">Scores Promedio por Dimensión</h3>
+      <div style="height:300px;position:relative"><canvas id="chart-radar"></canvas></div>
+    </div>
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-xl text-primary mb-1">SCI vs SRI — Dispersión</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Capacidades vs Resultados por proyecto</p>
+      <div style="height:300px;position:relative"><canvas id="chart-scatter"></canvas></div>
+    </div>
+  </section>
+</div>
+
+<!-- ===================== TAB 2: MATRIZ ===================== -->
+<div id="tab-matriz" class="tab-content space-y-8">
+  <div>
+    <h1 class="text-4xl font-extrabold font-headline tracking-tight text-primary mb-2">Matriz Comparativa de Proyectos</h1>
+    <p class="text-on-surface-variant max-w-2xl">Análisis multidimensional del portafolio. Haz clic en una fila para expandir el detalle.</p>
+  </div>
+  <!-- Filters -->
+  <section class="bg-surface-container-low rounded-xl p-6 flex flex-wrap items-end justify-between gap-4">
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-outline mb-1.5">Instrumento</label>
+        <select id="filter-instrumento" onchange="renderMatriz()" class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-4 py-2.5 w-64 shadow-sm border-0 focus:ring-2 focus:ring-primary/20">
+          <option value="">Todos los Instrumentos</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-outline mb-1.5">Ordenar por</label>
+        <select id="sort-by" onchange="renderMatriz()" class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-4 py-2.5 w-52 shadow-sm border-0 focus:ring-2 focus:ring-primary/20">
+          <option value="sci-desc">SCI (Descendente)</option>
+          <option value="sri-desc">SRI (Descendente)</option>
+          <option value="nombre-asc">Nombre (A-Z)</option>
+          <option value="cuadrante">Cuadrante</option>
+          <option value="brecha-desc">Brecha Mayor</option>
+        </select>
+      </div>
+    </div>
+    <span id="matriz-count" class="text-xs text-on-surface-variant font-medium"></span>
+  </section>
+  <!-- Table -->
+  <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto no-scrollbar">
+      <table class="w-full text-left">
+        <thead class="bg-surface-container-high/50">
+          <tr>
+            <th class="px-6 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider">Empresa / Proyecto</th>
+            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider">Instrumento</th>
+            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Sc. Mercado</th>
+            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Sc. Técnico</th>
+            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Aprendizajes</th>
+            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">SCI</th>
+            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">SRI</th>
+            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Cuadrante</th>
+            <th class="px-6 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Riesgo BG</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-matriz" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+    <div class="bg-surface-container-high/30 px-6 py-4 flex justify-between items-center text-xs text-on-surface-variant">
+      <span id="tabla-info">Cargando…</span>
+    </div>
+  </div>
+  <!-- Legend -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="p-4 rounded-xl bg-white border border-outline-variant/10">
+      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">SCI</h5>
+      <p class="text-xs text-on-surface-variant">Sistema de Capacidades de Innovación. Promedio ponderado de C1–C5.</p>
+    </div>
+    <div class="p-4 rounded-xl bg-white border border-outline-variant/10">
+      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">SRI</h5>
+      <p class="text-xs text-on-surface-variant">Sistema de Resultados de Innovación. Promedio ponderado de scores INNOVA.</p>
+    </div>
+    <div class="p-4 rounded-xl bg-white border border-outline-variant/10">
+      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">Riesgo BG</h5>
+      <div class="flex gap-3 mt-2">
+        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-[10px]">&gt;90d</span></div>
+        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-amber-400"></div><span class="text-[10px]">30-90d</span></div>
+        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px]">&lt;30d</span></div>
+      </div>
+    </div>
+    <div class="p-4 rounded-xl bg-white border border-outline-variant/10">
+      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">Heatmap Scores</h5>
+      <div class="flex gap-1 mt-2">
+        <div class="flex-1 py-1 rounded text-center text-[9px] font-bold score-low">&lt;2</div>
+        <div class="flex-1 py-1 rounded text-center text-[9px] font-bold score-mid-low">&lt;3</div>
+        <div class="flex-1 py-1 rounded text-center text-[9px] font-bold score-mid-high">&lt;4</div>
+        <div class="flex-1 py-1 rounded text-center text-[9px] font-bold score-high">≥4</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 3: CUADRANTES ===================== -->
+<div id="tab-cuadrantes" class="tab-content space-y-10">
+  <div>
+    <h1 class="text-4xl font-extrabold font-headline tracking-tight text-primary">Análisis de Cuadrantes SCI×SRI</h1>
+    <p class="text-on-surface-variant max-w-2xl mt-1">Posicionamiento estratégico del portafolio. Umbral: SCI = 3.5 y SRI = 3.5.</p>
+  </div>
+  <!-- KPIs cuadrantes -->
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#1D9E75">
+      <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Innovadores Consolidados</p>
+      <h3 id="kpi-q1" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <p class="text-xs font-medium mt-1" style="color:#1D9E75">SCI ≥ 3.5 y SRI ≥ 3.5</p>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#378ADD">
+      <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Potencial Latente</p>
+      <h3 id="kpi-q2" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <p class="text-xs font-medium mt-1" style="color:#378ADD">SCI ≥ 3.5 y SRI &lt; 3.5</p>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#888780">
+      <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">En Construcción</p>
+      <h3 id="kpi-q3" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <p class="text-xs font-medium mt-1" style="color:#888780">SCI &lt; 3.5 y SRI &lt; 3.5</p>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#BA7517">
+      <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Resultados sin Base</p>
+      <h3 id="kpi-q4" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <p class="text-xs font-medium mt-1" style="color:#BA7517">SCI &lt; 3.5 y SRI ≥ 3.5</p>
+    </div>
+  </section>
+  <!-- Matriz 2x2 -->
+  <section class="bg-surface-container-low rounded-xl p-8">
+    <h2 class="font-headline font-bold text-xl text-primary mb-2">Matriz Estratégica del Portafolio</h2>
+    <p class="text-xs text-on-surface-variant mb-6">Eje horizontal: SCI (capacidades) → | Eje vertical: SRI (resultados) ↑</p>
+    <div class="grid grid-cols-2 gap-4" style="min-height:460px">
+      <!-- Top row: SRI alto -->
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(55,138,221,.06);border:1px solid rgba(55,138,221,.2)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#378ADD">Potencial Latente — SCI alto, SRI bajo</span>
+        <div id="q-potencial" class="flex flex-wrap gap-1.5 content-start"></div>
+      </div>
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.2)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#1D9E75">Innovadores Consolidados — SCI alto, SRI alto</span>
+        <div id="q-innovadores" class="flex flex-wrap gap-1.5 content-start"></div>
+      </div>
+      <!-- Bottom row: SRI bajo -->
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(136,135,128,.06);border:1px solid rgba(136,135,128,.2)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#888780">En Construcción — SCI bajo, SRI bajo</span>
+        <div id="q-construccion" class="flex flex-wrap gap-1.5 content-start"></div>
+      </div>
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(186,117,23,.06);border:1px solid rgba(186,117,23,.2)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#BA7517">Resultados sin Base — SCI bajo, SRI alto</span>
+        <div id="q-resultados" class="flex flex-wrap gap-1.5 content-start"></div>
+      </div>
+    </div>
+  </section>
+  <!-- Charts -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-lg text-primary mb-6">Distribución por Cuadrante</h3>
+      <div style="height:280px;position:relative"><canvas id="chart-cuadrantes-doughnut"></canvas></div>
+    </div>
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-lg text-primary mb-6">Brecha SCI − SRI por Proyecto</h3>
+      <p class="text-xs text-on-surface-variant -mt-4 mb-4">Top 15 por magnitud de brecha</p>
+      <div style="height:280px;position:relative"><canvas id="chart-brecha"></canvas></div>
+    </div>
+  </section>
+  <!-- Vectores de avance -->
+  <section class="bg-surface-container-lowest p-8 rounded-xl">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+      <h3 class="font-headline font-bold text-lg text-primary">Vectores de avance — trayectoria SCI×SRI</h3>
+      <label class="flex items-center gap-2 text-xs text-on-surface-variant cursor-pointer">
+        <input type="checkbox" id="toggle-camino" class="accent-primary"> Mostrar camino completo
+      </label>
+    </div>
+    <p class="text-xs text-on-surface-variant mb-4">
+      Cada flecha va del primer al último corte evaluado. <span style="color:#1D9E75">Verde</span> = avanza ·
+      <span style="color:#c0392b">rojo</span> = retrocede · gris = mixto/estable. Punto suelto = aún sin trayectoria.
+    </p>
+    <div style="height:420px;position:relative"><canvas id="chart-vectores"></canvas></div>
+    <p id="vectores-empty" class="hidden text-xs text-on-surface-variant text-center py-6"></p>
+  </section>
+  <!-- Acciones -->
+  <section class="space-y-4">
+    <h2 class="font-headline font-bold text-xl text-primary">Acciones Sugeridas por Cuadrante</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(29,158,117,.1)">
+          <span class="material-symbols-outlined" style="color:#1D9E75">rocket_launch</span>
+        </div>
+        <div>
+          <h4 class="font-headline font-bold text-primary text-sm mb-1">Innovadores Consolidados</h4>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Priorizar escalamiento y visibilidad. Documentar buenas prácticas para transferencia al resto del portafolio.</p>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(55,138,221,.1)">
+          <span class="material-symbols-outlined" style="color:#378ADD">build</span>
+        </div>
+        <div>
+          <h4 class="font-headline font-bold text-primary text-sm mb-1">Potencial Latente</h4>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Asignar mentoría técnica y comercial para acelerar tracción de resultados. Revisar estrategia de mercado.</p>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(136,135,128,.1)">
+          <span class="material-symbols-outlined" style="color:#888780">history_edu</span>
+        </div>
+        <div>
+          <h4 class="font-headline font-bold text-primary text-sm mb-1">En Construcción</h4>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Fortalecer capacidades básicas. Evaluar viabilidad y diseñar plan de mejora a 90 días.</p>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(186,117,23,.1)">
+          <span class="material-symbols-outlined" style="color:#BA7517">warning</span>
+        </div>
+        <div>
+          <h4 class="font-headline font-bold text-primary text-sm mb-1">Resultados sin Base</h4>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Auditar sostenibilidad operativa. Identificar si los resultados son replicables sin la base de capacidades.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===================== TAB: MADUREZ IRL ===================== -->
+<div id="tab-madurez" class="tab-content space-y-8">
+  <section>
+    <h2 class="font-headline text-xl font-bold text-primary">Madurez del portafolio — Innovation Readiness Level (IRL)</h2>
+    <p class="text-sm text-on-surface-variant mt-1 max-w-3xl">Tercer lente operativo (modelo KTH, escala 1–9). No valora calidad ni potencial: indica cuán lejos ha avanzado cada proyecto en seis frentes y, sobre todo, <strong>cuál es el eslabón más débil</strong>. Perfil derivado de las variables MSEP (Base v4 §6.6).</p>
+  </section>
+
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <h3 class="font-headline font-bold text-primary text-sm mb-3">Perfil promedio del portafolio</h3>
+      <div style="height:320px;position:relative"><canvas id="chart-irl-radar"></canvas></div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <h3 class="font-headline font-bold text-primary text-sm mb-3">Eslabón más débil (frecuencia en la cartera)</h3>
+      <div style="height:320px;position:relative"><canvas id="chart-irl-weakest"></canvas></div>
+    </div>
+  </section>
+
+  <section class="bg-white rounded-2xl border border-slate-200 p-5">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+      <h3 class="font-headline font-bold text-primary text-sm">Evolución de la madurez en el tiempo</h3>
+      <select id="irl-serie-selector" onchange="renderIRLSeries()"
+        class="text-xs border border-slate-300 rounded-lg px-2 py-1 bg-white">
+        <option value="__avg__">Promedio del portafolio</option>
+      </select>
+    </div>
+    <div style="height:340px;position:relative"><canvas id="chart-irl-series"></canvas></div>
+    <div class="mt-4">
+      <p class="text-xs font-semibold text-on-surface-variant mb-1">Migración del eslabón más débil</p>
+      <div id="irl-weakest-timeline" class="flex flex-wrap items-center gap-1.5"></div>
+    </div>
+    <p id="irl-series-empty" class="hidden text-xs text-on-surface-variant text-center py-6"></p>
+  </section>
+
+  <section class="bg-white rounded-2xl border border-slate-200 p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-headline font-bold text-primary text-sm">Mapa de calor — proyectos × dimensiones</h3>
+      <span class="text-xs text-on-surface-variant">Escala 1–9 · ● = eslabón más débil</span>
+    </div>
+    <div class="overflow-x-auto"><table id="irl-heatmap" class="w-full text-xs border-collapse"></table></div>
+  </section>
+
+  <!-- Guía de lectura (colapsable) -->
+  <details class="bg-white rounded-2xl border border-slate-200 group">
+    <summary class="cursor-pointer select-none px-5 py-4 flex items-center justify-between text-sm font-headline font-bold text-primary">
+      <span class="flex items-center gap-2"><span class="material-symbols-outlined text-base">help</span>Guía de lectura — las 6 dimensiones IRL</span>
+      <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+    </summary>
+    <div class="px-5 pb-5 pt-1 space-y-5 border-t border-slate-100">
+      <!-- Escala de color -->
+      <div>
+        <p class="text-xs font-semibold text-on-surface-variant mb-2">Escala de madurez (1–9)</p>
+        <div class="h-3 w-full rounded-full" style="background:linear-gradient(to right,#c0392b 0%,#e67e22 25%,#f1c40f 50%,#7cb342 75%,#036a66 100%)"></div>
+        <div class="flex justify-between text-[10px] text-on-surface-variant mt-1">
+          <span>1 · idea / inicio</span><span>3</span><span>5 · en desarrollo</span><span>7</span><span>9 · consolidado / en mercado</span>
+        </div>
+      </div>
+      <!-- Dimensiones -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #378ADD">
+          <p class="font-bold text-primary text-sm">CRL — Cliente</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">Confirmación de la necesidad y adopción del cliente/usuario.</p>
+          <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 entender al cliente · 5–9 poner la solución en sus manos y vender.</p>
+        </div>
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #021446">
+          <p class="font-bold text-primary text-sm">TRL — Tecnología</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">Madurez técnica de la solución (escala original NASA).</p>
+          <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–3 investigación y concepto · 4–6 validación en entorno relevante · 7–9 sistema probado en operación.</p>
+        </div>
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #BA7517">
+          <p class="font-bold text-primary text-sm">BRL — Modelo de negocio</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">Viabilidad y sostenibilidad del modelo de negocio.</p>
+          <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–3 describir · 4–6 simular viabilidad · 7–9 confirmar en la realidad.</p>
+        </div>
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #7d3c98">
+          <p class="font-bold text-primary text-sm">IPRL — Propiedad intelectual</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">Identificación, protección y gestión de la PI.</p>
+          <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 identificar y evaluar protegibilidad · 5–9 proteger activamente según estrategia.</p>
+        </div>
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #1D9E75">
+          <p class="font-bold text-primary text-sm">TMRL — Equipo</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">Competencias, capacidad y alineamiento del equipo.</p>
+          <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 equipo inicial de validación · 5–9 construir y escalar la organización.</p>
+        </div>
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #c0392b">
+          <p class="font-bold text-primary text-sm">FRL — Financiamiento</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">Aseguramiento de los recursos necesarios por fase.</p>
+          <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 financiar la validación · 5–9 financiar la realización del modelo.</p>
+        </div>
+      </div>
+      <p class="text-[11px] text-on-surface-variant leading-relaxed border-t border-slate-100 pt-3">
+        Modelo <strong>KTH Innovation Readiness Level™</strong> (CC BY-NC-SA 4.0), escala 1–9. No valora calidad ni potencial:
+        indica <em>cuán lejos ha avanzado</em> el proyecto en cada frente. Las dimensiones no avanzan en forma simétrica, pero
+        <strong>brechas mayores a 2–3 niveles</strong> entre ellas inhiben el progreso. El <strong>eslabón más débil</strong> (la dimensión menor) es el dato más accionable.
+      </p>
+    </div>
+  </details>
+</div>
+
+<!-- ===================== TAB 4: FICHA ===================== -->
+<div id="tab-ficha" class="tab-content space-y-8">
+  <section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div class="w-full md:w-auto">
+      <label class="block text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Seleccionar Proyecto</label>
+      <select id="ficha-selector" onchange="renderFicha()" class="bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-4 py-3 text-primary font-headline font-medium focus:ring-2 focus:ring-primary/20 w-full md:w-[500px]"></select>
+    </div>
+  </section>
+  <div id="ficha-content"></div>
+</div>
+
+</main>
+
+<!-- Footer -->
+<footer class="bg-slate-50 w-full border-t border-slate-200 mt-16">
+  <div class="max-w-[1280px] mx-auto py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div>
+      <span class="font-headline font-bold text-primary text-base">MSEP CORFO</span>
+      <p class="text-xs uppercase tracking-widest text-slate-400 mt-0.5">© 2025 Subdirección de Innovación Empresarial e Internacionalización</p>
+    </div>
+    <span class="text-xs uppercase tracking-widest text-slate-400">Dashboard MSEP v1.0</span>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvkmNDo2Rk0JWL9ELg0kK9LnsQ-y4Z_DzN35lx3-45cPDO-jlDG0lz9ZiKWV9s4e4u02LUZOjhKMDJ/pub?gid=519246757&single=true&output=csv';
+
+const Q_COLORS = {
+  'Innovadores consolidados': '#1D9E75',
+  'Potencial latente':        '#378ADD',
+  'En construcción':          '#888780',
+  'Resultados sin base':      '#BA7517'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let portfolio = [];
+let charts = {};
+
+// --- Panel longitudinal (proyecto × corte) ---
+let panelByProject = {};   // { codigo: [ {fecha, sci, sri, cuadrante, irl:{...}, eslabon, origen} ... ] }
+let panelIsDemo = false;
+let panelLoaded = false;
+let appDemoMode = false;   // true cuando se cargan datos anonimizados de demostración (versión pública)
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = btn.dataset.tab === tab;
+    btn.className = 'tab-btn font-headline text-sm px-3 py-1 ' + (isActive ? 'active' : 'inactive');
+  });
+  if (tab === 'cuadrantes') renderCuadrantesCharts();
+  if (tab === 'madurez') renderIRL();
+}
+
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'toggle-camino') renderVectores('chart-vectores');
+});
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadFromSheets() {
+  showLoading(true);
+  try {
+    const resp = await fetch(SHEETS_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    parseAndRender(text, 'Google Sheets');
+  } catch(e) {
+    showLoading(false);
+    setDataSourceBadge(null);
+    openUploadModal();
+  }
+}
+
+// ============================================================
+// PANEL LONGITUDINAL
+// ============================================================
+const PANEL_PATHS = [
+  'panel_msep_demo.csv', 'panel_msep.csv',
+  '../datos/consolidado/panel_msep_demo.csv', '../datos/consolidado/panel_msep.csv'
+];
+
+async function loadPanel() {
+  for (const path of PANEL_PATHS) {
+    try {
+      const resp = await fetch(path);
+      if (resp.ok) {
+        const text = await resp.text();
+        if (text && text.trim().length) { parsePanel(text); return; }
+      }
+    } catch (e) { /* siguiente candidato */ }
+  }
+}
+
+function parsePanel(csvText) {
+  const res = Papa.parse(csvText, { header: true, skipEmptyLines: true, delimitersToGuess: [',',';','\t'] });
+  const num = v => { const x = parseFloat((v||'').toString().replace(',','.')); return isNaN(x) ? null : x; };
+  const by = {};
+  let demo = false;
+  (res.data || []).forEach(row => {
+    const r = {}; Object.keys(row).forEach(k => r[k.trim()] = (row[k]||'').toString().trim());
+    const code = r['Código'] || r['Codigo']; if (!code || !r['fecha_corte']) return;
+    if ((r['origen']||'').toLowerCase().includes('demo')) demo = true;
+    (by[code] = by[code] || []).push({
+      fecha: r['fecha_corte'],
+      empresa: r['Empresa'] || '', instrumento: r['Instrumento'] || '',
+      tipo: r['tipo_informe'] || '',
+      sci: num(r['SCI']), sri: num(r['SRI']), cuadrante: r['Cuadrante'] || '',
+      irl: {
+        CRL: num(r['IRL CRL']), TRL: num(r['IRL TRL']), BRL: num(r['IRL BRL']),
+        IPRL: num(r['IRL IPRL']), TMRL: num(r['IRL TMRL']), FRL: num(r['IRL FRL'])
+      },
+      eslabon: r['Eslabón más débil IRL'] || r['Eslabon mas debil IRL'] || '',
+      origen: r['origen'] || ''
+    });
+  });
+  Object.values(by).forEach(arr => arr.sort((a,b) => a.fecha.localeCompare(b.fecha)));
+  panelByProject = by;
+  panelIsDemo = demo;
+  panelLoaded = Object.keys(by).length > 0;
+  renderDemoBanner();
+}
+
+// Versión pública: intenta cargar datos anonimizados locales antes que Google Sheets.
+async function tryLoadDemoData() {
+  for (const path of ['consolidado_demo.csv', 'data/consolidado_demo.csv']) {
+    try {
+      const resp = await fetch(path);
+      if (resp.ok) {
+        const text = await resp.text();
+        if (text && text.trim().length) {
+          appDemoMode = true;
+          parseAndRender(text, 'Demo anonimizado');
+          renderDemoBanner();
+          return true;
+        }
+      }
+    } catch (e) { /* siguiente candidato */ }
+  }
+  return false;
+}
+
+function renderDemoBanner() {
+  let el = document.getElementById('panel-demo-banner');
+  if (!appDemoMode && !panelIsDemo) { if (el) el.remove(); return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'panel-demo-banner';
+    el.className = 'fixed bottom-3 right-3 z-50 bg-amber-100 border border-amber-400 text-amber-900 ' +
+      'text-xs font-medium px-3 py-2 rounded-lg shadow-md max-w-xs';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = appDemoMode
+    ? '⚠ <strong>Prototipo MSEP — datos anonimizados de demostración.</strong> Nombres y cifras son ficticios; los cortes longitudinales son simulados. La carga de datos reales es local (botón subir CSV).'
+    : '⚠ <strong>Datos longitudinales ILUSTRATIVOS</strong> (origen demo): los cortes previos son simulados para validar las vistas. Se reemplazan al acumularse cortes reales.';
+}
+
+// Cortes de un proyecto (vacío si no hay panel). Distintos por fecha de evaluación.
+function cortesDe(codigo) {
+  const arr = panelByProject[codigo] || [];
+  const seen = new Set(); const out = [];
+  arr.forEach(c => { if (!seen.has(c.fecha)) { seen.add(c.fecha); out.push(c); } });
+  return out;
+}
+
+// Conjunto ordenado de todas las fechas de corte presentes en el panel.
+function fechasPanel() {
+  const s = new Set();
+  Object.values(panelByProject).forEach(arr => arr.forEach(c => s.add(c.fecha)));
+  return [...s].sort();
+}
+
+function parseAndRender(csvText, source) {
+  const result = Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    dynamicTyping: false,
+    delimitersToGuess: [',', ';', '\t', '|']
+  });
+  if (!result.data || result.data.length === 0) {
+    alert('No se encontraron datos en el archivo.');
+    showLoading(false);
+    return;
+  }
+  portfolio = result.data.map(row => normalizeRow(row));
+  postProcess(portfolio);
+  setDataSourceBadge(source);
+  populateFilters();
+  renderDashboard();
+  renderMatriz();
+  renderCuadrantes();
+  renderIRL();
+  renderFichaSelector();
+  if (portfolio.length > 0) renderFicha();
+  showLoading(false);
+  closeUploadModal();
+}
+
+function normalizeRow(row) {
+  const r = {};
+  Object.keys(row).forEach(k => { r[k.trim()] = (row[k] || '').toString().trim(); });
+  const n = v => { const x = parseFloat((v||'').replace(',','.')); return isNaN(x) ? null : x; };
+  // Busca columna: primero nombre exacto, luego variantes conocidas del CSV real
+  const col = (...keys) => {
+    for (const k of keys) {
+      if (r[k] !== undefined && r[k] !== '') return r[k];
+    }
+    return undefined;
+  };
+
+  return {
+    codigo:           col('Código','Codigo') || '',
+    empresa:          col('Empresa') || '',
+    proyecto:         col('Proyecto') || '',
+    instrumento:      col('Instrumento') || '',
+    sector:           col('Sector industria','Sector') || '',
+    scoreMercado:     n(col('Score Mercado')),
+    scoreTecnico:     n(col('Score Técnico','Score Tecnico')),
+    scoreAprendizajes:n(col('Score Aprendizajes')),
+    c1: n(col('Cap. Absorción (C1)','C1')),
+    c2: n(col('Cap. Gestión I+D (C2)','C2')),
+    c3: n(col('Cap. Red (C3)','C3')),
+    c4: n(col('Cap. PI (C4)','C4')),
+    c5: n(col('Cap. Orientación Mercado (C5)','C5')),
+    sci: n(r['SCI']), sri: n(r['SRI']),
+    cuadrante:        r['Cuadrantes Innovacion'] || r['Cuadrante'] || '',
+    ventasAcumuladas: r['Monto ventas acumulado'] || '',
+    numClientes:      r['Número de clientes'] || r['Numero de clientes'] || '',
+    pipeline:         r['Pipeline comercial'] || '',
+    capitalLevantado: r['Capital levantado'] || '',
+    fuenteCapital:    r['Fuente capital'] || '',
+    estadoRonda:      r['Estado ronda'] || '',
+    tienePI:          r['Tiene PI registrada'] || '',
+    tipoPI:           r['Tipo PI'] || '',
+    estado:           r['Estado'] || '',
+    estadoVentas:     r['Estado ventas'] || '',
+    trl:              r['TRL estimado'] || '',
+    bgAnt:            n(r['Riesgo BG Ant']),
+    bgCump:           n(r['Riesgo BG Cump']),
+    aporteCorfo:      r['Aporte Corfo'] || '',
+    apBeneficiario:   r['Ap Beneficiario'] || '',
+    montoTotal:       r['Monto Total'] || '',
+    resumen:          r['Resumen del proyecto'] || '',
+    objetivos:        r['Objetivos principales'] || '',
+    observacion:      r['Observación ejecutivo'] || r['Observacion ejecutivo'] || '',
+    recomendaciones:  r['Recomendaciones'] || '',
+    irl: {
+      CRL:  n(r['IRL CRL']),
+      TRL:  n(r['IRL TRL']),
+      BRL:  n(r['IRL BRL']),
+      IPRL: n(r['IRL IPRL']),
+      TMRL: n(r['IRL TMRL']),
+      FRL:  n(r['IRL FRL']),
+    },
+    eslabonDebil: r['Eslabón más débil IRL'] || r['Eslabon mas debil IRL'] || '',
+    brecha: null,
+    cuadranteCalc: ''
+  };
+}
+
+const IRL_DIMS = ['CRL','TRL','BRL','IPRL','TMRL','FRL'];
+
+function postProcess(data) {
+  data.forEach(r => {
+    r.brecha = (r.sci !== null && r.sri !== null) ? r.sci - r.sri : null;
+    if (r.sci !== null && r.sri !== null) {
+      if (r.sci >= 3.5 && r.sri >= 3.5) r.cuadranteCalc = 'Innovadores consolidados';
+      else if (r.sci >= 3.5 && r.sri <  3.5) r.cuadranteCalc = 'Potencial latente';
+      else if (r.sci <  3.5 && r.sri >= 3.5) r.cuadranteCalc = 'Resultados sin base';
+      else r.cuadranteCalc = 'En construcción';
+    } else {
+      r.cuadranteCalc = r.cuadrante || 'Sin datos';
+    }
+  });
+}
+
+function avg(arr, key) {
+  const vals = arr.map(r => r[key]).filter(v => v !== null && !isNaN(v));
+  return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showLoading(v) {
+  document.getElementById('loading-overlay').style.display = v ? 'flex' : 'none';
+}
+function openUploadModal()  { document.getElementById('upload-modal').style.display = 'flex'; }
+function closeUploadModal() { document.getElementById('upload-modal').style.display = 'none'; }
+
+function setDataSourceBadge(source) {
+  const badge = document.getElementById('data-source-badge');
+  if (!source) { badge.classList.add('hidden'); return; }
+  badge.classList.remove('hidden');
+  badge.textContent = '● ' + source;
+  badge.className = 'text-xs font-medium px-2 py-1 rounded-full ' +
+    (source === 'Google Sheets' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700');
+}
+
+function scoreClass(v) {
+  if (v === null || v === undefined) return '';
+  if (v < 2) return 'score-low';
+  if (v < 3) return 'score-mid-low';
+  if (v < 4) return 'score-mid-high';
+  return 'score-high';
+}
+
+function bgRisk(days) {
+  if (days === null || days === undefined) return { dot: 'bg-gray-300', label: 'N/D', glow: '' };
+  if (days < 30)  return { dot: 'bg-red-500',     label: days + 'd', glow: 'shadow-[0_0_8px_rgba(239,68,68,0.5)]' };
+  if (days < 90)  return { dot: 'bg-amber-400',   label: days + 'd', glow: 'shadow-[0_0_8px_rgba(251,191,36,0.5)]' };
+  return            { dot: 'bg-emerald-500', label: days + 'd', glow: 'shadow-[0_0_8px_rgba(16,185,129,0.5)]' };
+}
+
+// ============================================================
+// FILE UPLOAD
+// ============================================================
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+});
+function handleFileInput(event) { const f = event.target.files[0]; if (f) readFile(f); }
+function readFile(file) {
+  showLoading(true);
+  const reader = new FileReader();
+  reader.onload = e => parseAndRender(e.target.result, 'CSV Local');
+  reader.onerror = () => { showLoading(false); alert('Error al leer el archivo.'); };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ============================================================
+// FILTERS
+// ============================================================
+function populateFilters() {
+  const instrumentos = [...new Set(portfolio.map(r => r.instrumento).filter(Boolean))].sort();
+  const sel = document.getElementById('filter-instrumento');
+  sel.innerHTML = '<option value="">Todos los Instrumentos</option>' +
+    instrumentos.map(i => `<option value="${esc(i)}">${esc(i)}</option>`).join('');
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// TAB 1: DASHBOARD
+// ============================================================
+function renderDashboard() {
+  // KPIs
+  document.getElementById('kpi-activos').textContent = portfolio.length;
+  const sciAvg = avg(portfolio, 'sci');
+  const sriAvg = avg(portfolio, 'sri');
+  const brechaAvg = sciAvg - sriAvg;
+  document.getElementById('kpi-sci').textContent    = sciAvg.toFixed(2);
+  document.getElementById('kpi-sri').textContent    = sriAvg.toFixed(2);
+  const bEl = document.getElementById('kpi-brecha');
+  bEl.textContent = (brechaAvg >= 0 ? '+' : '') + brechaAvg.toFixed(2);
+  bEl.style.color = brechaAvg >= 0 ? '#036a66' : '#ba1a1a';
+
+  const riesgoAlto = portfolio.filter(r =>
+    (r.bgAnt !== null && r.bgAnt <= 90) || (r.bgCump !== null && r.bgCump <= 90)
+  ).length;
+  document.getElementById('kpi-riesgo').textContent = riesgoAlto;
+
+  // Estado bar chart
+  const estadoCounts = {};
+  portfolio.forEach(r => { if (r.estado) estadoCounts[r.estado] = (estadoCounts[r.estado]||0) + 1; });
+  renderBarHorizontal('chart-estado', Object.keys(estadoCounts), Object.values(estadoCounts), '#021446');
+
+  // Instrumento doughnut
+  const instrCounts = {};
+  portfolio.forEach(r => { if (r.instrumento) instrCounts[r.instrumento] = (instrCounts[r.instrumento]||0) + 1; });
+  renderDoughnut('chart-instrumento', Object.keys(instrCounts), Object.values(instrCounts),
+    ['#021446','#036a66','#8492ca','#84d4cf','#F2897E','#1b2a5b','#b6c4ff']);
+
+  // Radar promedio portafolio
+  const rLabels = ['Mercado','Técnico','Aprendizajes','C1 Absorción','C2 Gestión','C3 Red','C4 PI','C5 Mercado'];
+  const rKeys   = ['scoreMercado','scoreTecnico','scoreAprendizajes','c1','c2','c3','c4','c5'];
+  renderRadar('chart-radar', rLabels, rKeys.map(k => avg(portfolio, k)), null);
+
+  // Scatter
+  renderScatter('chart-scatter', portfolio);
+}
+
+// ============================================================
+// TAB 2: MATRIZ
+// ============================================================
+function renderMatriz() {
+  const instrFilter = document.getElementById('filter-instrumento').value;
+  const sortBy      = document.getElementById('sort-by').value;
+  let data = portfolio.filter(r => !instrFilter || r.instrumento === instrFilter);
+  data = [...data].sort((a, b) => {
+    if (sortBy === 'sci-desc')   return (b.sci||0) - (a.sci||0);
+    if (sortBy === 'sri-desc')   return (b.sri||0) - (a.sri||0);
+    if (sortBy === 'nombre-asc') return a.empresa.localeCompare(b.empresa);
+    if (sortBy === 'cuadrante')  return a.cuadranteCalc.localeCompare(b.cuadranteCalc);
+    if (sortBy === 'brecha-desc')return (b.brecha||0) - (a.brecha||0);
+    return 0;
+  });
+
+  document.getElementById('matriz-count').textContent = data.length + ' proyectos';
+  document.getElementById('tabla-info').textContent   = 'Mostrando ' + data.length + ' proyectos';
+
+  // Map to global indices for ficha navigation
+  window._matrizData = data;
+
+  const tbody = document.getElementById('tabla-matriz');
+  tbody.innerHTML = data.map((r, idx) => {
+    const qColor = Q_COLORS[r.cuadranteCalc] || '#888';
+    const minBG  = Math.min(r.bgAnt ?? 9999, r.bgCump ?? 9999);
+    const bg     = bgRisk(minBG === 9999 ? null : minBG);
+    const globalIdx = portfolio.indexOf(r);
+
+    return `<tr class="group hover:bg-surface-container-low cursor-pointer transition-colors" onclick="toggleRow('detail-${idx}')">
+      <td class="px-6 py-4">
+        <div class="text-sm font-bold text-primary leading-tight">${esc(r.empresa)||'—'}</div>
+        <div class="text-[11px] text-on-surface-variant">${esc(r.proyecto||r.codigo)}</div>
+      </td>
+      <td class="px-4 py-4"><span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">${esc(r.instrumento||'—')}</span></td>
+      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ${scoreClass(r.scoreMercado)}">${r.scoreMercado ?? '—'}</span></td>
+      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ${scoreClass(r.scoreTecnico)}">${r.scoreTecnico ?? '—'}</span></td>
+      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ${scoreClass(r.scoreAprendizajes)}">${r.scoreAprendizajes ?? '—'}</span></td>
+      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${scoreClass(r.sci)}">${r.sci?.toFixed(2) ?? '—'}</span></td>
+      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${scoreClass(r.sri)}">${r.sri?.toFixed(2) ?? '—'}</span></td>
+      <td class="px-4 py-4"><span class="px-2 py-0.5 rounded-full text-[9px] font-bold text-white" style="background:${qColor}">${esc(r.cuadranteCalc)}</span></td>
+      <td class="px-6 py-4"><div class="flex justify-center"><div class="w-3 h-3 rounded-full ${bg.dot} ${bg.glow}" title="${bg.label}"></div></div></td>
+    </tr>
+    <tr id="detail-${idx}" style="display:none" class="bg-surface-container-low/30">
+      <td colspan="9" class="px-6 py-0">
+        <div class="py-5 border-l-4 border-primary ml-1 pl-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="col-span-2 space-y-3">
+            <p class="text-sm text-on-surface-variant leading-relaxed">${esc(r.resumen) || 'Sin resumen disponible.'}</p>
+            <div class="flex gap-3 flex-wrap">
+              ${r.aporteCorfo ? `<div class="bg-white p-3 rounded-lg border border-outline-variant/10"><span class="text-[10px] font-bold text-outline block mb-1">APORTE CORFO</span><span class="text-xs font-semibold text-primary">${esc(r.aporteCorfo)}</span></div>` : ''}
+              ${r.estado      ? `<div class="bg-white p-3 rounded-lg border border-outline-variant/10"><span class="text-[10px] font-bold text-outline block mb-1">ESTADO</span><span class="text-xs font-semibold text-primary">${esc(r.estado)}</span></div>` : ''}
+              ${r.trl         ? `<div class="bg-white p-3 rounded-lg border border-outline-variant/10"><span class="text-[10px] font-bold text-outline block mb-1">TRL</span><span class="text-xs font-semibold text-primary">${esc(r.trl)}</span></div>` : ''}
+            </div>
+          </div>
+          <div class="bg-white/70 p-4 rounded-xl space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-widest text-outline-variant mb-2">Capacidades</h4>
+            ${[['C1 Equipo',r.c1],['C2 Negocio',r.c2],['C3 Tecnología',r.c3],['C4 Gestión',r.c4],['C5 Red',r.c5]].map(([lbl,val]) => val !== null ? `
+              <div class="flex justify-between items-center text-xs"><span class="text-on-surface-variant">${lbl}</span><span class="font-bold">${val}</span></div>
+              <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden"><div class="bg-secondary h-full" style="width:${(val/5)*100}%"></div></div>` : '').join('')}
+            <button onclick="event.stopPropagation();switchTab('ficha');setTimeout(()=>{document.getElementById('ficha-selector').value=${globalIdx};renderFicha();},80)"
+              class="w-full mt-3 text-[10px] font-bold text-primary bg-primary-fixed/20 py-2 rounded uppercase tracking-widest hover:bg-primary-fixed/40 transition-colors">
+              Ver Ficha Completa →
+            </button>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleRow(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  document.querySelectorAll('[id^="detail-"]').forEach(r => r.style.display = 'none');
+  if (hidden) el.style.display = '';
+}
+
+// ============================================================
+// TAB 3: CUADRANTES
+// ============================================================
+function renderCuadrantes() {
+  const q = {
+    'Innovadores consolidados': [],
+    'Potencial latente': [],
+    'En construcción': [],
+    'Resultados sin base': []
+  };
+  portfolio.forEach(r => { if (q[r.cuadranteCalc]) q[r.cuadranteCalc].push(r); });
+
+  document.getElementById('kpi-q1').textContent = q['Innovadores consolidados'].length;
+  document.getElementById('kpi-q2').textContent = q['Potencial latente'].length;
+  document.getElementById('kpi-q3').textContent = q['En construcción'].length;
+  document.getElementById('kpi-q4').textContent = q['Resultados sin base'].length;
+
+  const pills = (arr, color) => arr.map(r =>
+    `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium text-white cursor-pointer hover:opacity-80 transition-opacity"
+       style="background:${color}" title="${esc(r.empresa)}"
+       onclick="switchTab('ficha');setTimeout(()=>{document.getElementById('ficha-selector').value=${portfolio.indexOf(r)};renderFicha();},80)">
+      ${esc(r.empresa || r.codigo)}
+    </span>`
+  ).join('');
+
+  document.getElementById('q-innovadores').innerHTML = pills(q['Innovadores consolidados'], '#1D9E75');
+  document.getElementById('q-potencial').innerHTML   = pills(q['Potencial latente'],        '#378ADD');
+  document.getElementById('q-construccion').innerHTML= pills(q['En construcción'],          '#888780');
+  document.getElementById('q-resultados').innerHTML  = pills(q['Resultados sin base'],      '#BA7517');
+}
+
+function renderCuadrantesCharts() {
+  if (!portfolio.length) return;
+
+  const counts = {
+    'Innovadores consolidados': 0,
+    'Potencial latente':        0,
+    'En construcción':          0,
+    'Resultados sin base':      0
+  };
+  portfolio.forEach(r => { if (counts[r.cuadranteCalc] !== undefined) counts[r.cuadranteCalc]++; });
+
+  destroyChart('chart-cuadrantes-doughnut');
+  charts['chart-cuadrantes-doughnut'] = new Chart(
+    document.getElementById('chart-cuadrantes-doughnut'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(counts),
+      datasets: [{
+        data: Object.values(counts),
+        backgroundColor: Object.keys(counts).map(k => Q_COLORS[k]),
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 10 } } }
+    }
+  });
+
+  // Brecha bar — top 15 by |brecha|
+  const bData = portfolio
+    .filter(r => r.brecha !== null)
+    .sort((a,b) => Math.abs(b.brecha) - Math.abs(a.brecha))
+    .slice(0, 15);
+
+  destroyChart('chart-brecha');
+  charts['chart-brecha'] = new Chart(document.getElementById('chart-brecha'), {
+    type: 'bar',
+    data: {
+      labels: bData.map(r => r.empresa || r.codigo),
+      datasets: [{
+        label: 'SCI − SRI',
+        data: bData.map(r => parseFloat(r.brecha.toFixed(2))),
+        backgroundColor: bData.map(r => r.brecha >= 0 ? '#378ADD88' : '#BA751788'),
+        borderColor:     bData.map(r => r.brecha >= 0 ? '#378ADD'   : '#BA7517'),
+        borderWidth: 1, borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#f3f4f5' }, ticks: { font: { family: 'Inter', size: 10 } } },
+        y: { grid: { display: false },   ticks: { font: { family: 'Inter', size: 10 } } }
+      }
+    }
+  });
+
+  renderVectores('chart-vectores');
+}
+
+// ============================================================
+// TAB 4: FICHA
+// ============================================================
+function renderFichaSelector() {
+  const sel = document.getElementById('ficha-selector');
+  sel.innerHTML = portfolio.map((r, i) => {
+    const label = r.empresa
+      ? r.empresa + (r.proyecto ? ' — ' + r.proyecto.substring(0,50) : '')
+      : r.codigo || 'Proyecto ' + (i+1);
+    return `<option value="${i}">${esc(label)}</option>`;
+  }).join('');
+}
+
+function renderFicha() {
+  const idx = parseInt(document.getElementById('ficha-selector').value);
+  if (isNaN(idx)) return;
+  const r = portfolio[idx];
+  if (!r) return;
+
+  const qColor = Q_COLORS[r.cuadranteCalc] || '#888';
+  const minBG  = Math.min(r.bgAnt ?? 9999, r.bgCump ?? 9999);
+
+  document.getElementById('ficha-content').innerHTML = `
+    <!-- Header gradient card -->
+    <div class="bg-gradient-to-br from-primary to-primary-container p-8 rounded-xl text-white shadow-lg overflow-hidden relative">
+      <div class="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-20 -mt-20" style="background:rgba(3,106,102,.12)"></div>
+      <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            ${r.estado      ? `<span class="bg-secondary px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase text-white ring-1 ring-white/20">${esc(r.estado)}</span>` : ''}
+            ${r.instrumento ? `<span class="bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white/80">${esc(r.instrumento)}</span>` : ''}
+            ${r.sector      ? `<span class="bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white/80">${esc(r.sector)}</span>` : ''}
+            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white ring-1 ring-white/20" style="background:${qColor}cc">${esc(r.cuadranteCalc)}</span>
+          </div>
+          <h1 class="text-3xl font-extrabold font-headline tracking-tight leading-tight mb-1">${esc(r.empresa||'—')}</h1>
+          <p class="text-white/70 text-base">${esc(r.proyecto||'')}</p>
+          ${r.codigo ? `<p class="text-white/40 text-xs mt-1 font-mono">${esc(r.codigo)}</p>` : ''}
+        </div>
+        <div class="flex gap-6 border-l border-white/10 pl-6 shrink-0">
+          ${r.montoTotal   ? `<div class="text-center"><div class="text-[10px] text-white/50 uppercase tracking-widest mb-1">Monto Total</div><div class="text-xl font-bold font-headline">${esc(r.montoTotal)}</div></div>` : ''}
+          ${r.aporteCorfo  ? `<div class="text-center"><div class="text-[10px] text-white/50 uppercase tracking-widest mb-1">Aporte CORFO</div><div class="text-xl font-bold font-headline">${esc(r.aporteCorfo)}</div></div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- SCI y SRI barras -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-surface-container-lowest p-6 rounded-xl space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="font-headline font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary">analytics</span>SCI — Capacidades
+          </h3>
+          <span class="text-2xl font-bold font-headline text-secondary">${r.sci?.toFixed(2) ?? '—'}</span>
+        </div>
+        <div class="h-3 w-full bg-surface-container rounded-full overflow-hidden">
+          <div class="h-full bg-secondary rounded-full transition-all" style="width:${r.sci ? (r.sci/5)*100 : 0}%"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-slate-400 uppercase"><span>Incipiente (0)</span><span>Consolidado (5)</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="font-headline font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined" style="color:${qColor}">insights</span>SRI — Resultados
+          </h3>
+          <span class="text-2xl font-bold font-headline" style="color:${qColor}">${r.sri?.toFixed(2) ?? '—'}</span>
+        </div>
+        <div class="h-3 w-full bg-surface-container rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all" style="width:${r.sri ? (r.sri/5)*100 : 0}%;background:${qColor}"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-slate-400 uppercase"><span>Incipiente (0)</span><span>Consolidado (5)</span></div>
+      </div>
+    </div>
+
+    <!-- Radar + Datos comerciales -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
+        <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100">Radar de Capacidades C1–C5</h3>
+        <div style="height:300px;position:relative"><canvas id="chart-ficha-radar"></canvas></div>
+      </div>
+      <div class="lg:col-span-5 bg-surface-container-lowest p-8 rounded-xl">
+        <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100">Datos Comerciales y Capital</h3>
+        <div class="space-y-3">
+          ${dataRow('Estado ventas',    r.estadoVentas)}
+          ${dataRow('Monto ventas',     r.ventasAcumuladas)}
+          ${dataRow('N° clientes',      r.numClientes)}
+          ${dataRow('Pipeline',         r.pipeline)}
+          ${dataRow('Capital levantado',r.capitalLevantado)}
+          ${dataRow('Fuente capital',   r.fuenteCapital)}
+          ${dataRow('Estado ronda',     r.estadoRonda)}
+          ${dataRow('PI registrada',    r.tienePI)}
+          ${dataRow('Tipo PI',          r.tipoPI)}
+          ${dataRow('TRL estimado',     r.trl)}
+        </div>
+      </div>
+    </div>
+
+    <!-- Boletas de garantía -->
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-primary mb-6 flex items-center gap-2">
+        <span class="material-symbols-outlined">verified_user</span>Vigencia Boletas de Garantía
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        ${bgBar('Boleta Anticipo',     r.bgAnt)}
+        ${bgBar('Boleta Cumplimiento', r.bgCump)}
+      </div>
+    </div>
+
+    <!-- Textos -->
+    <div class="space-y-4">
+      ${r.resumen     ? textCard('Resumen del Proyecto',   r.resumen,     'border-primary')           : ''}
+      ${r.objetivos   ? textCard('Objetivos Principales',  r.objetivos,   'border-secondary')          : ''}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        ${r.observacion     ? textCard('Observación Ejecutivo', r.observacion,   'border-[#F2897E]')   : ''}
+        ${r.recomendaciones ? textCard('Recomendaciones',       r.recomendaciones,'border-primary-container') : ''}
+      </div>
+    </div>
+
+    <!-- Evolución de madurez IRL del proyecto -->
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-primary mb-1 flex items-center gap-2">
+        <span class="material-symbols-outlined">trending_up</span>Evolución de madurez IRL
+      </h3>
+      <p id="ficha-irl-note" class="text-xs text-on-surface-variant mb-6"></p>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-outline-variant mb-3">Perfil: primer vs último corte</h4>
+          <div style="height:300px;position:relative"><canvas id="chart-ficha-irl-radar"></canvas></div>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-outline-variant mb-3">Trayectoria por dimensión (1–9)</h4>
+          <div style="height:300px;position:relative"><canvas id="chart-ficha-irl-evol"></canvas></div>
+        </div>
+      </div>
+      <div class="mt-6">
+        <p class="text-xs font-semibold text-on-surface-variant mb-1">Eslabón más débil por corte</p>
+        <div id="ficha-irl-timeline" class="flex flex-wrap items-center gap-1.5"></div>
+      </div>
+    </div>
+  `;
+
+  // Radar chart ficha
+  const radarCanvas = document.getElementById('chart-ficha-radar');
+  const capVals = [r.c1, r.c2, r.c3, r.c4, r.c5];
+  const hasCapData = capVals.some(v => v !== null && v > 0);
+
+  if (!hasCapData) {
+    // Sin datos de capacidades: mostrar aviso en lugar de ceros
+    radarCanvas.parentElement.innerHTML =
+      '<div class="flex items-center justify-center h-full text-xs text-on-surface-variant text-center">' +
+      '<span class="material-symbols-outlined mr-2 text-outline">info</span>' +
+      'Sin datos de capacidades C1–C5 para este proyecto.</div>';
+  } else {
+    // Solo promedia proyectos que tienen datos reales (avg() ya excluye nulls)
+    const portAvg = {
+      c1: avg(portfolio,'c1'), c2: avg(portfolio,'c2'), c3: avg(portfolio,'c3'),
+      c4: avg(portfolio,'c4'), c5: avg(portfolio,'c5')
+    };
+    destroyChart('chart-ficha-radar');
+    charts['chart-ficha-radar'] = new Chart(radarCanvas, {
+      type: 'radar',
+      data: {
+        labels: ['C1 Absorción','C2 Gestión I+D','C3 Red','C4 PI','C5 Mercado'],
+        datasets: [
+          {
+            label: r.empresa || 'Proyecto',
+            data: capVals,          // null donde no hay dato; Chart.js lo omite
+            backgroundColor: 'rgba(2,20,70,.12)',
+            borderColor: '#021446', borderWidth: 2,
+            pointBackgroundColor: '#021446', pointRadius: 4,
+            spanGaps: false
+          },
+          {
+            label: 'Promedio Portafolio',
+            data: [portAvg.c1, portAvg.c2, portAvg.c3, portAvg.c4, portAvg.c5],
+            backgroundColor: 'rgba(3,106,102,.08)',
+            borderColor: '#036a66', borderWidth: 1.5,
+            borderDash: [5,5],
+            pointBackgroundColor: '#036a66', pointRadius: 3,
+            spanGaps: false
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          r: { min:0, max:5, ticks:{stepSize:1, font:{size:9}}, grid:{color:'#edeeef'}, pointLabels:{font:{family:'Inter',size:11}} }
+        },
+        plugins: { legend: { position:'bottom', labels:{font:{family:'Inter',size:11}, boxWidth:12} } }
+      }
+    });
+  } // fin else hasCapData
+
+  renderFichaIRL(r.codigo);
+}
+
+// Evolución IRL del proyecto seleccionado (radar t0 vs último + líneas + timeline)
+function renderFichaIRL(codigo) {
+  const note = document.getElementById('ficha-irl-note');
+  const tl = document.getElementById('ficha-irl-timeline');
+  destroyChart('chart-ficha-irl-radar');
+  destroyChart('chart-ficha-irl-evol');
+  if (tl) tl.innerHTML = '';
+  const cortes = cortesDe(codigo);
+
+  if (!panelLoaded || cortes.length === 0) {
+    if (note) note.textContent = panelLoaded
+      ? 'Sin datos longitudinales para este proyecto.'
+      : 'Carga el panel longitudinal para ver la evolución de madurez.';
+    return;
+  }
+  const first = cortes[0], last = cortes[cortes.length - 1];
+
+  if (cortes.length === 1) {
+    if (note) note.textContent = 'Un solo corte evaluado (' + last.fecha + '): aún sin trayectoria. Se mostrará el perfil actual.';
+  } else if (note) {
+    note.textContent = `${cortes.length} cortes evaluados: ${first.fecha} → ${last.fecha}.`;
+  }
+
+  // Radar primer vs último corte (1–9)
+  const radarSets = [{
+    label: 'Último corte (' + last.fecha + ')', data: IRL_DIMS.map(d => last.irl[d]),
+    backgroundColor: 'rgba(2,20,70,.14)', borderColor: '#021446', borderWidth: 2,
+    pointBackgroundColor: '#021446', pointRadius: 4, spanGaps: false
+  }];
+  if (cortes.length > 1) {
+    radarSets.push({
+      label: 'Primer corte (' + first.fecha + ')', data: IRL_DIMS.map(d => first.irl[d]),
+      backgroundColor: 'rgba(136,135,128,.10)', borderColor: '#888780', borderWidth: 1.5,
+      borderDash: [5, 5], pointBackgroundColor: '#888780', pointRadius: 3, spanGaps: false
+    });
+  }
+  charts['chart-ficha-irl-radar'] = new Chart(document.getElementById('chart-ficha-irl-radar'), {
+    type: 'radar',
+    data: { labels: IRL_DIMS, datasets: radarSets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { min: 0, max: 9, ticks: { stepSize: 1, font: { size: 9 } }, grid: { color: '#edeeef' }, pointLabels: { font: { family: 'Inter', size: 11, weight: 'bold' } } } },
+      plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 10 }, boxWidth: 12 } } }
+    }
+  });
+
+  // Trayectoria por dimensión (líneas)
+  charts['chart-ficha-irl-evol'] = new Chart(document.getElementById('chart-ficha-irl-evol'), {
+    type: 'line',
+    data: {
+      labels: cortes.map(c => c.fecha),
+      datasets: IRL_DIMS.map(d => ({
+        label: d, data: cortes.map(c => c.irl[d]),
+        borderColor: IRL_DIM_COLORS[d], backgroundColor: IRL_DIM_COLORS[d],
+        borderWidth: 2, pointRadius: 3, tension: 0.25, spanGaps: true
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { min: 1, max: 9, ticks: { stepSize: 1, font: { size: 10 } } },
+        x: { ticks: { font: { family: 'Inter', size: 10 } } }
+      },
+      plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 10 }, boxWidth: 12, padding: 6 } } }
+    }
+  });
+
+  // Timeline del eslabón más débil
+  if (tl) {
+    tl.innerHTML = cortes.map((c, i) => {
+      const w = weakestOf(c.irl, c.fecha);
+      const chip = w.dim
+        ? `<span class="px-2 py-1 rounded text-[11px] font-semibold text-white" style="background:${IRL_DIM_COLORS[w.dim] || '#888'}">${w.dim} ${w.val}</span>`
+        : `<span class="px-2 py-1 rounded text-[11px] text-on-surface-variant bg-slate-100">—</span>`;
+      const arrow = i < cortes.length - 1 ? '<span class="text-slate-400 text-xs">→</span>' : '';
+      return `<span class="flex items-center gap-1.5"><span class="text-[10px] text-on-surface-variant">${c.fecha}:</span>${chip}</span>${arrow}`;
+    }).join('');
+  }
+}
+
+function dataRow(label, val) {
+  if (!val) return '';
+  return `<div class="flex justify-between items-center py-1 border-b border-slate-50">
+    <span class="text-xs text-slate-500 uppercase font-medium">${label}</span>
+    <span class="text-sm font-semibold text-primary text-right max-w-[60%]">${esc(val)}</span>
+  </div>`;
+}
+
+function bgBar(label, days) {
+  if (days === null || days === undefined) {
+    return `<div><div class="flex justify-between text-xs mb-2"><span class="font-bold text-primary">${label}</span><span class="text-slate-400">N/D</span></div><div class="h-2 w-full bg-slate-100 rounded-full"></div></div>`;
+  }
+  const pct = Math.min(100, Math.max(2, (days / 365) * 100));
+  let color = '#10b981'; let status = days + ' días restantes';
+  if (days < 30)      { color = '#ef4444'; status = 'CRÍTICO: ' + days + ' días'; }
+  else if (days < 90) { color = '#f59e0b'; status = 'Atención: ' + days + ' días'; }
+  return `<div class="space-y-2">
+    <div class="flex justify-between text-xs font-bold mb-1">
+      <span class="text-primary">${label}</span>
+      <span style="color:${color}">${status}</span>
+    </div>
+    <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+      <div class="h-full rounded-full transition-all" style="width:${pct}%;background:${color}"></div>
+    </div>
+  </div>`;
+}
+
+function textCard(title, text, borderClass) {
+  return `<div class="bg-white border-l-4 ${borderClass} p-6 rounded-r-xl shadow-sm">
+    <h4 class="font-headline font-bold text-primary mb-3">${title}</h4>
+    <p class="text-on-surface-variant text-sm leading-relaxed">${esc(text)}</p>
+  </div>`;
+}
+
+// ============================================================
+// CHART HELPERS
+// ============================================================
+function destroyChart(id) {
+  if (charts[id]) { try { charts[id].destroy(); } catch(e){} delete charts[id]; }
+}
+
+function renderBarHorizontal(id, labels, data, color) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: color + 'cc', borderColor: color, borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#f3f4f5' }, ticks: { font: { family: 'Inter', size: 11 } } },
+        y: { grid: { display: false },   ticks: { font: { family: 'Inter', size: 11 } } }
+      }
+    }
+  });
+}
+
+function renderDoughnut(id, labels, data, colors) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 10 } } }
+    }
+  });
+}
+
+function renderRadar(id, labels, data) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Promedio Portafolio', data,
+        backgroundColor: 'rgba(2,20,70,.12)', borderColor: '#021446', borderWidth: 2,
+        pointBackgroundColor: '#021446', pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        r: { min:0, max:5, ticks:{stepSize:1,font:{size:9}}, grid:{color:'#edeeef'}, pointLabels:{font:{family:'Inter',size:11}} }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function renderScatter(id, data) {
+  destroyChart(id);
+  const datasets = Object.entries(Q_COLORS).map(([qName, color]) => ({
+    label: qName,
+    data: data
+      .filter(r => r.cuadranteCalc === qName && r.sci !== null && r.sri !== null)
+      .map(r => ({ x: r.sri, y: r.sci, empresa: r.empresa })),
+    backgroundColor: color + '99',
+    borderColor: color,
+    borderWidth: 1.5,
+    pointRadius: 6,
+    pointHoverRadius: 8
+  }));
+
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { min:0, max:5, title:{display:true,text:'SRI (Resultados)',  font:{family:'Inter',size:11}}, grid:{color:'#f3f4f5'}, ticks:{font:{family:'Inter',size:10}} },
+        y: { min:0, max:5, title:{display:true,text:'SCI (Capacidades)', font:{family:'Inter',size:11}}, grid:{color:'#f3f4f5'}, ticks:{font:{family:'Inter',size:10}} }
+      },
+      plugins: {
+        legend: { position:'bottom', labels:{font:{family:'Inter',size:11},boxWidth:12,padding:10} },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.raw.empresa||''} — SRI: ${ctx.raw.x?.toFixed(2)}, SCI: ${ctx.raw.y?.toFixed(2)}`
+          }
+        }
+      }
+    },
+    plugins: [{
+      id: 'quadrantLines',
+      beforeDraw(chart) {
+        const { ctx, scales: { x, y } } = chart;
+        const x3 = x.getPixelForValue(3.5);
+        const y3 = y.getPixelForValue(3.5);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(118,118,128,.35)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4,4]);
+        ctx.beginPath(); ctx.moveTo(x3, chart.chartArea.top);    ctx.lineTo(x3, chart.chartArea.bottom); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(chart.chartArea.left, y3);   ctx.lineTo(chart.chartArea.right, y3);  ctx.stroke();
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+// ============================================================
+// VECTORES DE AVANCE SCI×SRI (longitudinal)
+// ============================================================
+function quadrantLinesPlugin() {
+  return {
+    id: 'quadrantLines',
+    beforeDraw(chart) {
+      const { ctx, scales: { x, y } } = chart;
+      const xx = x.getPixelForValue(3.5), yy = y.getPixelForValue(3.5);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(118,118,128,.35)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(xx, chart.chartArea.top); ctx.lineTo(xx, chart.chartArea.bottom); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(chart.chartArea.left, yy); ctx.lineTo(chart.chartArea.right, yy); ctx.stroke();
+      ctx.restore();
+    }
+  };
+}
+
+function arrowHeadsPlugin() {
+  return {
+    id: 'arrowHeads',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((ds, di) => {
+        if (!ds._isVector) return;
+        const pts = chart.getDatasetMeta(di).data;
+        if (pts.length < 2) return;
+        const p1 = pts[pts.length - 2], p2 = pts[pts.length - 1];
+        const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x), L = 10;
+        ctx.save();
+        ctx.fillStyle = ds.borderColor;
+        ctx.beginPath();
+        ctx.moveTo(p2.x, p2.y);
+        ctx.lineTo(p2.x - L * Math.cos(ang - Math.PI / 7), p2.y - L * Math.sin(ang - Math.PI / 7));
+        ctx.lineTo(p2.x - L * Math.cos(ang + Math.PI / 7), p2.y - L * Math.sin(ang + Math.PI / 7));
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      });
+    }
+  };
+}
+
+function renderVectores(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  destroyChart(id);
+  const emptyEl = document.getElementById('vectores-empty');
+  const setEmpty = msg => { if (emptyEl) { emptyEl.classList.remove('hidden'); emptyEl.textContent = msg; } };
+  const clearEmpty = () => { if (emptyEl) emptyEl.classList.add('hidden'); };
+
+  if (!panelLoaded) {
+    setEmpty('Carga el panel longitudinal (panel_msep.csv) para ver las trayectorias.');
+    return;
+  }
+  const full = document.getElementById('toggle-camino')?.checked;
+  const datasets = [];
+  const singles = [];
+  let trajCount = 0;
+
+  Object.entries(panelByProject).forEach(([code, raw]) => {
+    const cortes = raw.filter(c => c.sci !== null && c.sri !== null);
+    if (!cortes.length) return;
+    if (cortes.length === 1) {
+      singles.push({ x: cortes[0].sri, y: cortes[0].sci, empresa: cortes[0].empresa || code });
+      return;
+    }
+    trajCount++;
+    const first = cortes[0], last = cortes[cortes.length - 1];
+    const delta = (last.sci + last.sri) - (first.sci + first.sri);
+    const color = delta > 0.1 ? '#1D9E75' : (delta < -0.1 ? '#c0392b' : '#888780');
+    const seq = full ? cortes : [first, last];
+    datasets.push({
+      label: last.empresa || code,
+      data: seq.map(c => ({ x: c.sri, y: c.sci, fecha: c.fecha })),
+      showLine: true, tension: 0, borderColor: color, borderWidth: 2,
+      pointRadius: seq.map((_, i) => i === seq.length - 1 ? 5 : 3),
+      pointBackgroundColor: seq.map((_, i) => i === seq.length - 1 ? color : color + '66'),
+      pointBorderColor: color, _isVector: true
+    });
+  });
+  if (singles.length) {
+    datasets.push({
+      label: 'Sin trayectoria aún', data: singles, showLine: false,
+      pointStyle: 'crossRot', pointRadius: 4, borderColor: '#b0b0b0', backgroundColor: '#b0b0b0'
+    });
+  }
+  if (trajCount === 0) {
+    setEmpty('Aún no hay proyectos con ≥2 cortes evaluados; las trayectorias aparecerán al acumularse evaluaciones.');
+  } else clearEmpty();
+
+  charts[id] = new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { min: 0, max: 5, title: { display: true, text: 'SRI (Resultados)', font: { family: 'Inter', size: 11 } }, grid: { color: '#f3f4f5' }, ticks: { font: { size: 10 } } },
+        y: { min: 0, max: 5, title: { display: true, text: 'SCI (Capacidades)', font: { family: 'Inter', size: 11 } }, grid: { color: '#f3f4f5' }, ticks: { font: { size: 10 } } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label || ''} — SRI:${ctx.raw.x?.toFixed(2)}, SCI:${ctx.raw.y?.toFixed(2)}${ctx.raw.fecha ? ' · ' + ctx.raw.fecha : ''}` } }
+      }
+    },
+    plugins: [quadrantLinesPlugin(), arrowHeadsPlugin()]
+  });
+}
+
+// ============================================================
+// MADUREZ IRL
+// ============================================================
+// Escala 1–9 → color (rojo → ámbar → verde CORFO)
+function irlColor(v) {
+  if (v === null || v === undefined || isNaN(v)) return '#f1f5f9';
+  const stops = [
+    [1,'#c0392b'], [3,'#e67e22'], [5,'#f1c40f'], [7,'#7cb342'], [9,'#036a66']
+  ];
+  v = Math.max(1, Math.min(9, v));
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [a, ca] = stops[i], [b, cb] = stops[i+1];
+    if (v >= a && v <= b) {
+      const t = (v - a) / (b - a);
+      const ha = ca.match(/\w\w/g).map(h => parseInt(h,16));
+      const hb = cb.match(/\w\w/g).map(h => parseInt(h,16));
+      const mix = ha.map((x,j) => Math.round(x + (hb[j]-x)*t));
+      return 'rgb(' + mix.join(',') + ')';
+    }
+  }
+  return '#036a66';
+}
+
+function irlAvg(dim) {
+  const vals = portfolio.map(r => r.irl && r.irl[dim]).filter(v => v !== null && v !== undefined && !isNaN(v));
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+}
+
+function hasIrlData() {
+  return portfolio.some(r => r.irl && IRL_DIMS.some(d => r.irl[d] !== null));
+}
+
+function renderIRL() {
+  const heatmap = document.getElementById('irl-heatmap');
+  if (!heatmap) return;
+
+  if (!hasIrlData()) {
+    destroyChart('chart-irl-radar'); destroyChart('chart-irl-weakest');
+    heatmap.innerHTML = '<tr><td class="text-xs text-on-surface-variant py-6 text-center">' +
+      'El consolidado cargado no incluye columnas IRL. Regenera el consolidado con el Flujo 4 (Paso 11b) para ver el perfil de madurez.</td></tr>';
+    return;
+  }
+
+  // --- Radar: promedio del portafolio ---
+  const avgVals = IRL_DIMS.map(d => irlAvg(d));
+  destroyChart('chart-irl-radar');
+  charts['chart-irl-radar'] = new Chart(document.getElementById('chart-irl-radar'), {
+    type: 'radar',
+    data: {
+      labels: IRL_DIMS,
+      datasets: [{
+        label: 'Promedio portafolio (IRL 1–9)',
+        data: avgVals,
+        backgroundColor: 'rgba(2,20,70,.12)',
+        borderColor: '#021446', borderWidth: 2,
+        pointBackgroundColor: '#021446', pointRadius: 4, spanGaps: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { min:0, max:9, ticks:{stepSize:1, font:{size:9}}, grid:{color:'#edeeef'}, pointLabels:{font:{family:'Inter',size:12, weight:'bold'}} } },
+      plugins: { legend: { position:'bottom', labels:{font:{family:'Inter',size:11}, boxWidth:12} } }
+    }
+  });
+
+  // --- Barra: frecuencia del eslabón más débil ---
+  const weakCounts = {}; IRL_DIMS.forEach(d => weakCounts[d] = 0);
+  portfolio.forEach(r => {
+    const m = (r.eslabonDebil || '').match(/^([A-Z]+)/);
+    if (m && weakCounts[m[1]] !== undefined) weakCounts[m[1]]++;
+  });
+  destroyChart('chart-irl-weakest');
+  charts['chart-irl-weakest'] = new Chart(document.getElementById('chart-irl-weakest'), {
+    type: 'bar',
+    data: {
+      labels: IRL_DIMS,
+      datasets: [{
+        label: 'Proyectos con esta dimensión como eslabón más débil',
+        data: IRL_DIMS.map(d => weakCounts[d]),
+        backgroundColor: IRL_DIMS.map((d,i) => i===2 ? '#c0392b' : '#021446')
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero:true, ticks:{stepSize:1, font:{size:10}} }, x: { ticks:{font:{family:'Inter',size:11, weight:'bold'}} } },
+      plugins: { legend: { display:false } }
+    }
+  });
+
+  // --- Heatmap: proyectos × dimensiones ---
+  const rows = portfolio.filter(r => r.irl && IRL_DIMS.some(d => r.irl[d] !== null));
+  let html = '<thead><tr class="text-left text-on-surface-variant">' +
+    '<th class="py-2 pr-3 font-semibold sticky left-0 bg-white">Proyecto</th>' +
+    IRL_DIMS.map(d => '<th class="px-2 py-2 text-center font-semibold">'+d+'</th>').join('') +
+    '<th class="px-2 py-2 text-left font-semibold">Eslabón débil</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    const weakDim = (r.eslabonDebil || '').match(/^([A-Z]+)/);
+    const wk = weakDim ? weakDim[1] : '';
+    const label = (r.empresa || r.proyecto || r.codigo || '—');
+    html += '<tr class="border-t border-slate-100">' +
+      '<td class="py-1.5 pr-3 sticky left-0 bg-white max-w-[220px] truncate" title="'+label.replace(/"/g,'&quot;')+'">'+label+'</td>';
+    IRL_DIMS.forEach(d => {
+      const v = r.irl[d];
+      const txt = (v === null || v === undefined) ? '' : v;
+      const isWeak = (d === wk);
+      html += '<td class="px-2 py-1.5 text-center font-semibold" style="background:'+irlColor(v)+';color:'+(v>=5?'#fff':'#1a1a1a')+'">'+
+        (isWeak ? '● ' : '') + txt + '</td>';
+    });
+    html += '<td class="px-2 py-1.5 text-left font-medium text-on-surface-variant">'+(r.eslabonDebil||'—')+'</td></tr>';
+  });
+  html += '</tbody>';
+  heatmap.innerHTML = html;
+
+  populateIRLSerieSelector();
+  renderIRLSeries();
+}
+
+// --- Series de tiempo IRL (longitudinal) ---
+const IRL_DIM_COLORS = {
+  CRL: '#378ADD', TRL: '#021446', BRL: '#BA7517',
+  IPRL: '#7d3c98', TMRL: '#1D9E75', FRL: '#c0392b'
+};
+
+function populateIRLSerieSelector() {
+  const sel = document.getElementById('irl-serie-selector');
+  if (!sel || !panelLoaded) return;
+  const current = sel.value;
+  const opts = ['<option value="__avg__">Promedio del portafolio</option>'];
+  Object.keys(panelByProject).sort().forEach(code => {
+    const c = panelByProject[code][0];
+    opts.push(`<option value="${code}">${esc(c.empresa || code)}</option>`);
+  });
+  sel.innerHTML = opts.join('');
+  if ([...sel.options].some(o => o.value === current)) sel.value = current;
+}
+
+// Devuelve {labels:[...], series:{dim:[...]}, weakest:[{label,dim,val}]} para la selección.
+function irlSeriesData(sel) {
+  if (sel === '__avg__') {
+    // Promedio alineado por índice de corte (los proyectos se evalúan en calendarios distintos)
+    const cortesPorProy = Object.keys(panelByProject).map(code => cortesDe(code));
+    const maxCortes = Math.max(0, ...cortesPorProy.map(a => a.length));
+    const labels = Array.from({ length: maxCortes }, (_, i) => 'Corte ' + (i + 1));
+    const series = {}; IRL_DIMS.forEach(d => series[d] = []);
+    const weakest = [];
+    for (let i = 0; i < maxCortes; i++) {
+      const profile = {};
+      IRL_DIMS.forEach(d => {
+        const vals = cortesPorProy.map(a => a[i] && a[i].irl[d]).filter(v => v !== null && v !== undefined && !isNaN(v));
+        const avg = vals.length ? vals.reduce((x, y) => x + y, 0) / vals.length : null;
+        series[d].push(avg === null ? null : +avg.toFixed(2));
+        profile[d] = avg;
+      });
+      weakest.push(weakestOf(profile, labels[i]));
+    }
+    return { labels, series, weakest };
+  }
+  const cortes = cortesDe(sel);
+  const labels = cortes.map(c => c.fecha);
+  const series = {}; IRL_DIMS.forEach(d => series[d] = cortes.map(c => c.irl[d]));
+  const weakest = cortes.map(c => weakestOf(c.irl, c.fecha));
+  return { labels, series, weakest };
+}
+
+function weakestOf(profile, label) {
+  const present = Object.entries(profile).filter(([, v]) => v !== null && v !== undefined && !isNaN(v));
+  if (!present.length) return { label, dim: '', val: null };
+  const [dim, val] = present.reduce((m, e) => e[1] < m[1] ? e : m);
+  return { label, dim, val: Math.round(val) };
+}
+
+function renderIRLSeries() {
+  const canvas = document.getElementById('chart-irl-series');
+  const emptyEl = document.getElementById('irl-series-empty');
+  const timeline = document.getElementById('irl-weakest-timeline');
+  if (!canvas) return;
+  destroyChart('chart-irl-series');
+  if (timeline) timeline.innerHTML = '';
+
+  const anyTraj = Object.keys(panelByProject).some(c => cortesDe(c).length >= 2);
+  if (!panelLoaded || !anyTraj) {
+    if (emptyEl) {
+      emptyEl.classList.remove('hidden');
+      emptyEl.textContent = panelLoaded
+        ? 'Aún no hay proyectos con ≥2 cortes; la evolución aparecerá al acumularse evaluaciones.'
+        : 'Carga el panel longitudinal para ver la evolución temporal del IRL.';
+    }
+    return;
+  }
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  const sel = document.getElementById('irl-serie-selector')?.value || '__avg__';
+  const { labels, series, weakest } = irlSeriesData(sel);
+
+  charts['chart-irl-series'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: IRL_DIMS.map(d => ({
+        label: d, data: series[d], borderColor: IRL_DIM_COLORS[d], backgroundColor: IRL_DIM_COLORS[d],
+        borderWidth: 2, pointRadius: 3, tension: 0.25, spanGaps: true
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { min: 1, max: 9, ticks: { stepSize: 1, font: { size: 10 } }, title: { display: true, text: 'Nivel IRL (1–9)', font: { size: 11 } } },
+        x: { ticks: { font: { family: 'Inter', size: 11 } } }
+      },
+      plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 8 } } }
+    }
+  });
+
+  // Tira de migración del eslabón más débil
+  if (timeline) {
+    timeline.innerHTML = weakest.map((w, i) => {
+      const chip = w.dim
+        ? `<span class="px-2 py-1 rounded text-[11px] font-semibold text-white" style="background:${IRL_DIM_COLORS[w.dim]||'#888'}">${w.dim} ${w.val}</span>`
+        : `<span class="px-2 py-1 rounded text-[11px] text-on-surface-variant bg-slate-100">—</span>`;
+      const arrow = i < weakest.length - 1 ? '<span class="text-slate-400 text-xs">→</span>' : '';
+      return `<span class="flex items-center gap-1.5"><span class="text-[10px] text-on-surface-variant">${w.label}:</span>${chip}</span>${arrow}`;
+    }).join('');
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadPanel();                       // panel listo antes de renderizar (vistas longitudinales)
+  const demo = await tryLoadDemoData();    // versión pública: datos anonimizados locales
+  if (!demo) loadFromSheets();             // uso interno: Google Sheets / upload manual
+});
+</script>
+</body>
+</html>
