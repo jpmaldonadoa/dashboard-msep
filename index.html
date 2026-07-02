@@ -7,70 +7,112 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script>
+/* Tema oscuro «Sala de Control» — tokens derivados del navy CORFO #021446.
+   Paleta categórica de cuadrantes validada CVD/contraste sobre #0b1226:
+   teal #00a297 · azul #6f84d6 · coral #e2685a · ocre #b78829 */
 tailwind.config = {
   darkMode: "class",
   theme: {
     extend: {
       colors: {
-        "surface-container-low": "#f3f4f5",
-        "surface-container": "#edeeef",
-        "on-surface-variant": "#45464f",
-        "surface": "#f8f9fa",
-        "error": "#ba1a1a",
-        "outline": "#767680",
-        "outline-variant": "#c6c5d0",
+        "surface-container-low": "#0f1830",
+        "surface-container": "#141f3d",
+        "on-surface-variant": "#aab4d4",
+        "surface": "#0b1226",
+        "error": "#f0988c",
+        "outline": "#78829f",
+        "outline-variant": "#4a5578",
         "on-primary": "#ffffff",
-        "secondary-container": "#a0f1eb",
-        "surface-container-high": "#e7e8e9",
-        "on-secondary-container": "#12706c",
-        "on-tertiary-container": "#dd786e",
-        "primary-fixed-dim": "#b6c4ff",
-        "primary-fixed": "#dce1ff",
-        "tertiary-container": "#591410",
-        "surface-container-highest": "#e1e2e4",
-        "surface-container-lowest": "#ffffff",
-        "on-surface": "#191c1d",
+        "secondary-container": "#0e4f4a",
+        "surface-container-high": "#182448",
+        "on-secondary-container": "#7fe0d6",
+        "on-tertiary-container": "#f0988c",
+        "primary-fixed-dim": "#2c3f75",
+        "primary-fixed": "#22335f",
+        "tertiary-container": "#3a1f1c",
+        "surface-container-highest": "#1c2950",
+        "surface-container-lowest": "#101a33",
+        "on-surface": "#e8ecf8",
         "on-secondary": "#ffffff",
-        "on-primary-container": "#8492ca",
-        "background": "#f8f9fa",
-        "secondary": "#036a66",
+        "on-primary-container": "#8fa3e8",
+        "background": "#0b1226",
+        "secondary": "#00a297",
         "primary": "#021446",
-        "secondary-fixed": "#a0f1eb",
+        "secondary-fixed": "#0e4f4a",
         "primary-container": "#1b2a5b",
-        "surface-variant": "#e1e2e4",
-        "surface-bright": "#f8f9fa",
-        "secondary-fixed-dim": "#84d4cf"
+        "surface-variant": "#1c2950",
+        "surface-bright": "#16213f",
+        "secondary-fixed-dim": "#4fc4bb"
       },
       borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
-      fontFamily: { headline: ["Manrope"], body: ["Inter"], label: ["Inter"] }
+      fontFamily: { headline: ["Manrope"], body: ["Inter"], label: ["Inter"], mono: ["IBM Plex Mono"] }
     }
   }
 }
 </script>
 <style>
-  body { font-family: 'Inter', sans-serif; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background-image: radial-gradient(800px 400px at 70% -20%, rgba(0,162,151,.07), transparent 60%);
+  }
   .font-headline, h1, h2, h3 { font-family: 'Manrope', sans-serif; }
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .upload-zone-dots {
-    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%23021446FF' stroke-width='2' stroke-dasharray='12%2c 16' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%236F84D6FF' stroke-width='2' stroke-dasharray='12%2c 16' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
     border-radius: 12px;
   }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
-  .score-low  { background-color:#fee2e2;color:#991b1b; }
-  .score-mid-low { background-color:#fef3c7;color:#92400e; }
-  .score-mid-high { background-color:#d1fae5;color:#065f46; }
-  .score-high { background-color:#a7f3d0;color:#064e3b; }
-  .drag-over { background-color:rgba(2,20,70,.08)!important; }
+  /* Escala de score — chips oscuros (fondo tintado + texto claro del mismo matiz) */
+  .score-low  { background-color:rgba(226,104,90,.16);color:#f0988c; }
+  .score-mid-low { background-color:rgba(183,136,41,.16);color:#e8c583; }
+  .score-mid-high { background-color:rgba(0,162,151,.13);color:#5ec8bf; }
+  .score-high { background-color:rgba(0,162,151,.24);color:#7fe0d6; }
+  .score-low,.score-mid-low,.score-mid-high,.score-high { font-family:'IBM Plex Mono',monospace; }
+  .drag-over { background-color:rgba(111,132,214,.10)!important; }
   .tab-btn { background: none; border: none; cursor: pointer; }
-  .tab-btn.active { color:#021446; border-bottom:2px solid #021446; padding-bottom:4px; font-weight:600; }
-  .tab-btn.inactive { color:#64748b; }
-  .tab-btn.inactive:hover { color:#021446; }
+  .tab-btn.active { color:#e8ecf8; border-bottom:2px solid #00a297; padding-bottom:4px; font-weight:600; }
+  .tab-btn.inactive { color:#78829f; }
+  .tab-btn.inactive:hover { color:#c5cde8; }
+  /* Cifras KPI en mono técnico */
+  #kpi-activos,#kpi-sci,#kpi-sri,#kpi-brecha,#kpi-riesgo,#kpi-q1,#kpi-q2,#kpi-q3,#kpi-q4 {
+    font-family:'IBM Plex Mono',monospace; font-weight:600;
+  }
+  /* ---- Overrides del tema oscuro sobre utilidades Tailwind hardcodeadas ---- */
+  .text-primary{color:#e8ecf8!important}
+  .bg-primary{background-color:#24408f!important}
+  .border-primary{border-color:#00a297!important}
+  .accent-primary{accent-color:#00a297!important}
+  .text-secondary{color:#4fc4bb!important}
+  .bg-secondary{background-color:#00a297!important}
+  .border-secondary{border-color:#4fc4bb!important}
+  .bg-white{background-color:#101a33!important}
+  .bg-white\/70{background-color:rgba(13,20,41,.82)!important}
+  .text-slate-400{color:#78829f!important}
+  .text-slate-500{color:#8a94b8!important}
+  .text-slate-700{color:#c5cde8!important}
+  .bg-slate-50{background-color:#0f1830!important}
+  .bg-slate-100{background-color:#1c2950!important}
+  .hover\:bg-slate-50:hover{background-color:#182448!important}
+  .hover\:bg-slate-100:hover{background-color:#1c2950!important}
+  .hover\:bg-primary\/5:hover{background-color:rgba(111,132,214,.08)!important}
+  .border-slate-100,.border-slate-200,.border-slate-300{border-color:rgba(148,163,213,.14)!important}
+  .divide-slate-100>:not([hidden])~:not([hidden]){border-color:rgba(148,163,213,.12)!important}
+  .bg-green-100{background-color:rgba(0,162,151,.15)!important}
+  .text-green-700{color:#5ec8bf!important}
+  .bg-blue-100{background-color:rgba(111,132,214,.15)!important}
+  .text-blue-700{color:#9fb0f0!important}
+  .bg-amber-100{background-color:rgba(183,136,41,.16)!important}
+  .border-amber-400{border-color:rgba(183,136,41,.5)!important}
+  .text-amber-900{color:#e8c583!important}
+  .shadow-sm{box-shadow:none!important}
+  .shadow-lg,.shadow-2xl,.shadow-md{box-shadow:0 10px 32px rgba(0,0,0,.4)!important}
+  select,input{color-scheme:dark}
 </style>
 </head>
 <body class="bg-surface text-on-surface">
@@ -126,9 +168,13 @@ tailwind.config = {
 
 <!-- Header -->
 <header class="bg-white/70 backdrop-blur-xl top-0 z-50 sticky border-b border-slate-100">
-  <div class="flex justify-between items-center w-full max-w-[1280px] mx-auto px-6 h-16">
-    <div class="flex items-center gap-8">
-      <span class="text-lg font-bold tracking-tight text-primary font-headline">MSEP — Portafolio CORFO</span>
+  <div class="flex justify-between items-center w-full max-w-[1280px] mx-auto px-6 h-16 gap-4">
+    <div class="flex items-center gap-4 min-w-0">
+      <img src="data:image/png;base64,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" alt="CORFO" class="h-[22px] shrink-0"/>
+      <div class="w-px h-5 bg-outline-variant/60 shrink-0"></div>
+      <span class="font-mono text-[12.5px] font-semibold text-on-surface-variant tracking-wide whitespace-nowrap">
+        <span class="text-on-surface font-bold">MSEP</span> <span class="text-secondary-fixed-dim">/</span> portafolio_siei
+      </span>
       <nav class="hidden md:flex gap-1 items-center h-full">
         <button data-tab="dashboard" class="tab-btn active font-headline text-sm px-3 py-1">Dashboard Ejecutivo</button>
         <button data-tab="matriz" class="tab-btn inactive font-headline text-sm px-3 py-1">Matriz Comparativa</button>
@@ -137,7 +183,7 @@ tailwind.config = {
         <button data-tab="ficha" class="tab-btn inactive font-headline text-sm px-3 py-1">Ficha de Proyecto</button>
       </nav>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 shrink-0">
       <span id="data-source-badge" class="text-xs font-medium px-2 py-1 rounded-full hidden"></span>
       <button onclick="openUploadModal()" class="p-2 rounded-full hover:bg-slate-50 transition-all text-slate-500" title="Cargar CSV">
         <span class="material-symbols-outlined">upload_file</span>
@@ -313,25 +359,25 @@ tailwind.config = {
   </div>
   <!-- KPIs cuadrantes -->
   <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#1D9E75">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#00a297">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Innovadores Consolidados</p>
       <h3 id="kpi-q1" class="text-3xl font-headline font-bold text-primary">—</h3>
-      <p class="text-xs font-medium mt-1" style="color:#1D9E75">SCI ≥ 3.5 y SRI ≥ 3.5</p>
+      <p class="text-xs font-medium mt-1" style="color:#4fc4bb">SCI ≥ 3.5 y SRI ≥ 3.5</p>
     </div>
-    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#378ADD">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#6f84d6">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Potencial Latente</p>
       <h3 id="kpi-q2" class="text-3xl font-headline font-bold text-primary">—</h3>
-      <p class="text-xs font-medium mt-1" style="color:#378ADD">SCI ≥ 3.5 y SRI &lt; 3.5</p>
+      <p class="text-xs font-medium mt-1" style="color:#9fb0f0">SCI ≥ 3.5 y SRI &lt; 3.5</p>
     </div>
-    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#888780">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#b78829">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">En Construcción</p>
       <h3 id="kpi-q3" class="text-3xl font-headline font-bold text-primary">—</h3>
-      <p class="text-xs font-medium mt-1" style="color:#888780">SCI &lt; 3.5 y SRI &lt; 3.5</p>
+      <p class="text-xs font-medium mt-1" style="color:#e8c583">SCI &lt; 3.5 y SRI &lt; 3.5</p>
     </div>
-    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#BA7517">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#e2685a">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Resultados sin Base</p>
       <h3 id="kpi-q4" class="text-3xl font-headline font-bold text-primary">—</h3>
-      <p class="text-xs font-medium mt-1" style="color:#BA7517">SCI &lt; 3.5 y SRI ≥ 3.5</p>
+      <p class="text-xs font-medium mt-1" style="color:#f0988c">SCI &lt; 3.5 y SRI ≥ 3.5</p>
     </div>
   </section>
   <!-- Matriz 2x2 -->
@@ -340,21 +386,21 @@ tailwind.config = {
     <p class="text-xs text-on-surface-variant mb-6">Eje horizontal: SCI (capacidades) → | Eje vertical: SRI (resultados) ↑</p>
     <div class="grid grid-cols-2 gap-4" style="min-height:460px">
       <!-- Top row: SRI alto -->
-      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(55,138,221,.06);border:1px solid rgba(55,138,221,.2)">
-        <span class="text-[10px] font-bold uppercase mb-1" style="color:#378ADD">Potencial Latente — SCI alto, SRI bajo</span>
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(111,132,214,.07);border:1px solid rgba(111,132,214,.28)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#9fb0f0">Potencial Latente — SCI alto, SRI bajo</span>
         <div id="q-potencial" class="flex flex-wrap gap-1.5 content-start"></div>
       </div>
-      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.2)">
-        <span class="text-[10px] font-bold uppercase mb-1" style="color:#1D9E75">Innovadores Consolidados — SCI alto, SRI alto</span>
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(0,162,151,.07);border:1px solid rgba(0,162,151,.28)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#4fc4bb">Innovadores Consolidados — SCI alto, SRI alto</span>
         <div id="q-innovadores" class="flex flex-wrap gap-1.5 content-start"></div>
       </div>
       <!-- Bottom row: SRI bajo -->
-      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(136,135,128,.06);border:1px solid rgba(136,135,128,.2)">
-        <span class="text-[10px] font-bold uppercase mb-1" style="color:#888780">En Construcción — SCI bajo, SRI bajo</span>
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(183,136,41,.07);border:1px solid rgba(183,136,41,.28)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#e8c583">En Construcción — SCI bajo, SRI bajo</span>
         <div id="q-construccion" class="flex flex-wrap gap-1.5 content-start"></div>
       </div>
-      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(186,117,23,.06);border:1px solid rgba(186,117,23,.2)">
-        <span class="text-[10px] font-bold uppercase mb-1" style="color:#BA7517">Resultados sin Base — SCI bajo, SRI alto</span>
+      <div class="rounded-xl p-5 flex flex-col gap-2 relative" style="background:rgba(226,104,90,.07);border:1px solid rgba(226,104,90,.28)">
+        <span class="text-[10px] font-bold uppercase mb-1" style="color:#f0988c">Resultados sin Base — SCI bajo, SRI alto</span>
         <div id="q-resultados" class="flex flex-wrap gap-1.5 content-start"></div>
       </div>
     </div>
@@ -380,8 +426,8 @@ tailwind.config = {
       </label>
     </div>
     <p class="text-xs text-on-surface-variant mb-4">
-      Cada flecha va del primer al último corte evaluado. <span style="color:#1D9E75">Verde</span> = avanza ·
-      <span style="color:#c0392b">rojo</span> = retrocede · gris = mixto/estable. Punto suelto = aún sin trayectoria.
+      Cada flecha va del primer al último corte evaluado. <span style="color:#4fc4bb">Teal</span> = avanza ·
+      <span style="color:#f0988c">coral</span> = retrocede · gris = mixto/estable. Punto suelto = aún sin trayectoria.
     </p>
     <div style="height:420px;position:relative"><canvas id="chart-vectores"></canvas></div>
     <p id="vectores-empty" class="hidden text-xs text-on-surface-variant text-center py-6"></p>
@@ -391,8 +437,8 @@ tailwind.config = {
     <h2 class="font-headline font-bold text-xl text-primary">Acciones Sugeridas por Cuadrante</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(29,158,117,.1)">
-          <span class="material-symbols-outlined" style="color:#1D9E75">rocket_launch</span>
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(0,162,151,.14)">
+          <span class="material-symbols-outlined" style="color:#4fc4bb">rocket_launch</span>
         </div>
         <div>
           <h4 class="font-headline font-bold text-primary text-sm mb-1">Innovadores Consolidados</h4>
@@ -400,8 +446,8 @@ tailwind.config = {
         </div>
       </div>
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(55,138,221,.1)">
-          <span class="material-symbols-outlined" style="color:#378ADD">build</span>
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(111,132,214,.14)">
+          <span class="material-symbols-outlined" style="color:#9fb0f0">build</span>
         </div>
         <div>
           <h4 class="font-headline font-bold text-primary text-sm mb-1">Potencial Latente</h4>
@@ -409,8 +455,8 @@ tailwind.config = {
         </div>
       </div>
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(136,135,128,.1)">
-          <span class="material-symbols-outlined" style="color:#888780">history_edu</span>
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(183,136,41,.14)">
+          <span class="material-symbols-outlined" style="color:#e8c583">history_edu</span>
         </div>
         <div>
           <h4 class="font-headline font-bold text-primary text-sm mb-1">En Construcción</h4>
@@ -418,8 +464,8 @@ tailwind.config = {
         </div>
       </div>
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(186,117,23,.1)">
-          <span class="material-symbols-outlined" style="color:#BA7517">warning</span>
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(226,104,90,.14)">
+          <span class="material-symbols-outlined" style="color:#f0988c">warning</span>
         </div>
         <div>
           <h4 class="font-headline font-bold text-primary text-sm mb-1">Resultados sin Base</h4>
@@ -489,32 +535,32 @@ tailwind.config = {
       </div>
       <!-- Dimensiones -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #378ADD">
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #6f84d6">
           <p class="font-bold text-primary text-sm">CRL — Cliente</p>
           <p class="text-xs text-on-surface-variant mt-0.5">Confirmación de la necesidad y adopción del cliente/usuario.</p>
           <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 entender al cliente · 5–9 poner la solución en sus manos y vender.</p>
         </div>
-        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #021446">
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #00a297">
           <p class="font-bold text-primary text-sm">TRL — Tecnología</p>
           <p class="text-xs text-on-surface-variant mt-0.5">Madurez técnica de la solución (escala original NASA).</p>
           <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–3 investigación y concepto · 4–6 validación en entorno relevante · 7–9 sistema probado en operación.</p>
         </div>
-        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #BA7517">
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #b78829">
           <p class="font-bold text-primary text-sm">BRL — Modelo de negocio</p>
           <p class="text-xs text-on-surface-variant mt-0.5">Viabilidad y sostenibilidad del modelo de negocio.</p>
           <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–3 describir · 4–6 simular viabilidad · 7–9 confirmar en la realidad.</p>
         </div>
-        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #7d3c98">
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #b98ce0">
           <p class="font-bold text-primary text-sm">IPRL — Propiedad intelectual</p>
           <p class="text-xs text-on-surface-variant mt-0.5">Identificación, protección y gestión de la PI.</p>
           <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 identificar y evaluar protegibilidad · 5–9 proteger activamente según estrategia.</p>
         </div>
-        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #1D9E75">
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #4fc48f">
           <p class="font-bold text-primary text-sm">TMRL — Equipo</p>
           <p class="text-xs text-on-surface-variant mt-0.5">Competencias, capacidad y alineamiento del equipo.</p>
           <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 equipo inicial de validación · 5–9 construir y escalar la organización.</p>
         </div>
-        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #c0392b">
+        <div class="rounded-lg border border-slate-100 p-3" style="border-left:3px solid #e2685a">
           <p class="font-bold text-primary text-sm">FRL — Financiamiento</p>
           <p class="text-xs text-on-surface-variant mt-0.5">Aseguramiento de los recursos necesarios por fase.</p>
           <p class="text-[11px] text-outline-variant mt-1"><strong>Etapas:</strong> 1–4 financiar la validación · 5–9 financiar la realización del modelo.</p>
@@ -559,12 +605,23 @@ tailwind.config = {
 // ============================================================
 const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvkmNDo2Rk0JWL9ELg0kK9LnsQ-y4Z_DzN35lx3-45cPDO-jlDG0lz9ZiKWV9s4e4u02LUZOjhKMDJ/pub?gid=519246757&single=true&output=csv';
 
+/* Paleta categórica de cuadrantes — validada CVD/contraste sobre #0b1226 */
 const Q_COLORS = {
-  'Innovadores consolidados': '#1D9E75',
-  'Potencial latente':        '#378ADD',
-  'En construcción':          '#888780',
-  'Resultados sin base':      '#BA7517'
+  'Innovadores consolidados': '#00a297',
+  'Potencial latente':        '#6f84d6',
+  'En construcción':          '#b78829',
+  'Resultados sin base':      '#e2685a'
 };
+
+// Defaults Chart.js — tema oscuro Sala de Control
+Chart.defaults.font.family = 'Inter';
+Chart.defaults.color = '#8a94b8';
+Chart.defaults.scales.radialLinear.ticks.backdropColor = 'transparent';
+Object.assign(Chart.defaults.plugins.tooltip, {
+  backgroundColor: '#1a2547', borderColor: 'rgba(148,163,213,.25)', borderWidth: 1,
+  titleFont: { family: 'Manrope', weight: '700' }, bodyFont: { family: 'IBM Plex Mono', size: 11 },
+  padding: 10, cornerRadius: 8, displayColors: false
+});
 
 // ============================================================
 // STATE
@@ -682,6 +739,18 @@ async function tryLoadDemoData() {
       }
     } catch (e) { /* siguiente candidato */ }
   }
+  return false;
+}
+
+// Uso local/offline (reuniones): carga datos REALES si hay un consolidado.csv junto al HTML.
+async function tryLoadLocalReal() {
+  try {
+    const resp = await fetch('consolidado.csv');
+    if (resp.ok) {
+      const text = await resp.text();
+      if (text && text.trim().length) { parseAndRender(text, 'Datos locales'); return true; }
+    }
+  } catch (e) { /* sin archivo local */ }
   return false;
 }
 
@@ -905,7 +974,7 @@ function renderDashboard() {
   document.getElementById('kpi-sri').textContent    = sriAvg.toFixed(2);
   const bEl = document.getElementById('kpi-brecha');
   bEl.textContent = (brechaAvg >= 0 ? '+' : '') + brechaAvg.toFixed(2);
-  bEl.style.color = brechaAvg >= 0 ? '#036a66' : '#ba1a1a';
+  bEl.style.color = brechaAvg >= 0 ? '#4fc4bb' : '#f0988c';
 
   const riesgoAlto = portfolio.filter(r =>
     (r.bgAnt !== null && r.bgAnt <= 90) || (r.bgCump !== null && r.bgCump <= 90)
@@ -915,13 +984,13 @@ function renderDashboard() {
   // Estado bar chart
   const estadoCounts = {};
   portfolio.forEach(r => { if (r.estado) estadoCounts[r.estado] = (estadoCounts[r.estado]||0) + 1; });
-  renderBarHorizontal('chart-estado', Object.keys(estadoCounts), Object.values(estadoCounts), '#021446');
+  renderBarHorizontal('chart-estado', Object.keys(estadoCounts), Object.values(estadoCounts), '#00a297');
 
   // Instrumento doughnut
   const instrCounts = {};
   portfolio.forEach(r => { if (r.instrumento) instrCounts[r.instrumento] = (instrCounts[r.instrumento]||0) + 1; });
   renderDoughnut('chart-instrumento', Object.keys(instrCounts), Object.values(instrCounts),
-    ['#021446','#036a66','#8492ca','#84d4cf','#F2897E','#1b2a5b','#b6c4ff']);
+    ['#00a297','#6f84d6','#e2685a','#b78829','#4fc48f','#b98ce0','#8fa3e8']);
 
   // Radar promedio portafolio
   const rLabels = ['Mercado','Técnico','Aprendizajes','C1 Absorción','C2 Gestión','C3 Red','C4 PI','C5 Mercado'];
@@ -1035,10 +1104,10 @@ function renderCuadrantes() {
     </span>`
   ).join('');
 
-  document.getElementById('q-innovadores').innerHTML = pills(q['Innovadores consolidados'], '#1D9E75');
-  document.getElementById('q-potencial').innerHTML   = pills(q['Potencial latente'],        '#378ADD');
-  document.getElementById('q-construccion').innerHTML= pills(q['En construcción'],          '#888780');
-  document.getElementById('q-resultados').innerHTML  = pills(q['Resultados sin base'],      '#BA7517');
+  document.getElementById('q-innovadores').innerHTML = pills(q['Innovadores consolidados'], Q_COLORS['Innovadores consolidados']);
+  document.getElementById('q-potencial').innerHTML   = pills(q['Potencial latente'],        Q_COLORS['Potencial latente']);
+  document.getElementById('q-construccion').innerHTML= pills(q['En construcción'],          Q_COLORS['En construcción']);
+  document.getElementById('q-resultados').innerHTML  = pills(q['Resultados sin base'],      Q_COLORS['Resultados sin base']);
 }
 
 function renderCuadrantesCharts() {
@@ -1085,8 +1154,8 @@ function renderCuadrantesCharts() {
       datasets: [{
         label: 'SCI − SRI',
         data: bData.map(r => parseFloat(r.brecha.toFixed(2))),
-        backgroundColor: bData.map(r => r.brecha >= 0 ? '#378ADD88' : '#BA751788'),
-        borderColor:     bData.map(r => r.brecha >= 0 ? '#378ADD'   : '#BA7517'),
+        backgroundColor: bData.map(r => r.brecha >= 0 ? '#6f84d688' : '#e2685a88'),
+        borderColor:     bData.map(r => r.brecha >= 0 ? '#6f84d6'   : '#e2685a'),
         borderWidth: 1, borderRadius: 3
       }]
     },
@@ -1094,7 +1163,7 @@ function renderCuadrantesCharts() {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: '#f3f4f5' }, ticks: { font: { family: 'Inter', size: 10 } } },
+        x: { grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { family: 'Inter', size: 10 } } },
         y: { grid: { display: false },   ticks: { font: { family: 'Inter', size: 10 } } }
       }
     }
@@ -1215,7 +1284,7 @@ function renderFicha() {
       ${r.resumen     ? textCard('Resumen del Proyecto',   r.resumen,     'border-primary')           : ''}
       ${r.objetivos   ? textCard('Objetivos Principales',  r.objetivos,   'border-secondary')          : ''}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        ${r.observacion     ? textCard('Observación Ejecutivo', r.observacion,   'border-[#F2897E]')   : ''}
+        ${r.observacion     ? textCard('Observación Ejecutivo', r.observacion,   'border-[#e2685a]')   : ''}
         ${r.recomendaciones ? textCard('Recomendaciones',       r.recomendaciones,'border-primary-container') : ''}
       </div>
     </div>
@@ -1269,18 +1338,18 @@ function renderFicha() {
           {
             label: r.empresa || 'Proyecto',
             data: capVals,          // null donde no hay dato; Chart.js lo omite
-            backgroundColor: 'rgba(2,20,70,.12)',
-            borderColor: '#021446', borderWidth: 2,
-            pointBackgroundColor: '#021446', pointRadius: 4,
+            backgroundColor: 'rgba(111,132,214,.20)',
+            borderColor: '#8fa3e8', borderWidth: 2,
+            pointBackgroundColor: '#8fa3e8', pointRadius: 4,
             spanGaps: false
           },
           {
             label: 'Promedio Portafolio',
             data: [portAvg.c1, portAvg.c2, portAvg.c3, portAvg.c4, portAvg.c5],
-            backgroundColor: 'rgba(3,106,102,.08)',
-            borderColor: '#036a66', borderWidth: 1.5,
+            backgroundColor: 'rgba(0,162,151,.14)',
+            borderColor: '#00a297', borderWidth: 1.5,
             borderDash: [5,5],
-            pointBackgroundColor: '#036a66', pointRadius: 3,
+            pointBackgroundColor: '#00a297', pointRadius: 3,
             spanGaps: false
           }
         ]
@@ -1288,7 +1357,7 @@ function renderFicha() {
       options: {
         responsive: true, maintainAspectRatio: false,
         scales: {
-          r: { min:0, max:5, ticks:{stepSize:1, font:{size:9}}, grid:{color:'#edeeef'}, pointLabels:{font:{family:'Inter',size:11}} }
+          r: { min:0, max:5, ticks:{stepSize:1, font:{size:9}}, grid:{color:'rgba(148,163,213,.14)'}, pointLabels:{font:{family:'Inter',size:11}} }
         },
         plugins: { legend: { position:'bottom', labels:{font:{family:'Inter',size:11}, boxWidth:12} } }
       }
@@ -1324,14 +1393,14 @@ function renderFichaIRL(codigo) {
   // Radar primer vs último corte (1–9)
   const radarSets = [{
     label: 'Último corte (' + last.fecha + ')', data: IRL_DIMS.map(d => last.irl[d]),
-    backgroundColor: 'rgba(2,20,70,.14)', borderColor: '#021446', borderWidth: 2,
-    pointBackgroundColor: '#021446', pointRadius: 4, spanGaps: false
+    backgroundColor: 'rgba(111,132,214,.22)', borderColor: '#8fa3e8', borderWidth: 2,
+    pointBackgroundColor: '#8fa3e8', pointRadius: 4, spanGaps: false
   }];
   if (cortes.length > 1) {
     radarSets.push({
       label: 'Primer corte (' + first.fecha + ')', data: IRL_DIMS.map(d => first.irl[d]),
-      backgroundColor: 'rgba(136,135,128,.10)', borderColor: '#888780', borderWidth: 1.5,
-      borderDash: [5, 5], pointBackgroundColor: '#888780', pointRadius: 3, spanGaps: false
+      backgroundColor: 'rgba(148,163,213,.12)', borderColor: '#78829f', borderWidth: 1.5,
+      borderDash: [5, 5], pointBackgroundColor: '#78829f', pointRadius: 3, spanGaps: false
     });
   }
   charts['chart-ficha-irl-radar'] = new Chart(document.getElementById('chart-ficha-irl-radar'), {
@@ -1339,7 +1408,7 @@ function renderFichaIRL(codigo) {
     data: { labels: IRL_DIMS, datasets: radarSets },
     options: {
       responsive: true, maintainAspectRatio: false,
-      scales: { r: { min: 0, max: 9, ticks: { stepSize: 1, font: { size: 9 } }, grid: { color: '#edeeef' }, pointLabels: { font: { family: 'Inter', size: 11, weight: 'bold' } } } },
+      scales: { r: { min: 0, max: 9, ticks: { stepSize: 1, font: { size: 9 } }, grid: { color: 'rgba(148,163,213,.14)' }, pointLabels: { font: { family: 'Inter', size: 11, weight: 'bold' } } } },
       plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 10 }, boxWidth: 12 } } }
     }
   });
@@ -1431,7 +1500,7 @@ function renderBarHorizontal(id, labels, data, color) {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: '#f3f4f5' }, ticks: { font: { family: 'Inter', size: 11 } } },
+        x: { grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { family: 'Inter', size: 11 } } },
         y: { grid: { display: false },   ticks: { font: { family: 'Inter', size: 11 } } }
       }
     }
@@ -1461,14 +1530,14 @@ function renderRadar(id, labels, data) {
       labels,
       datasets: [{
         label: 'Promedio Portafolio', data,
-        backgroundColor: 'rgba(2,20,70,.12)', borderColor: '#021446', borderWidth: 2,
-        pointBackgroundColor: '#021446', pointRadius: 4
+        backgroundColor: 'rgba(111,132,214,.20)', borderColor: '#8fa3e8', borderWidth: 2,
+        pointBackgroundColor: '#8fa3e8', pointRadius: 4
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       scales: {
-        r: { min:0, max:5, ticks:{stepSize:1,font:{size:9}}, grid:{color:'#edeeef'}, pointLabels:{font:{family:'Inter',size:11}} }
+        r: { min:0, max:5, ticks:{stepSize:1,font:{size:9}}, grid:{color:'rgba(148,163,213,.14)'}, pointLabels:{font:{family:'Inter',size:11}} }
       },
       plugins: { legend: { display: false } }
     }
@@ -1495,8 +1564,8 @@ function renderScatter(id, data) {
     options: {
       responsive: true, maintainAspectRatio: false,
       scales: {
-        x: { min:0, max:5, title:{display:true,text:'SRI (Resultados)',  font:{family:'Inter',size:11}}, grid:{color:'#f3f4f5'}, ticks:{font:{family:'Inter',size:10}} },
-        y: { min:0, max:5, title:{display:true,text:'SCI (Capacidades)', font:{family:'Inter',size:11}}, grid:{color:'#f3f4f5'}, ticks:{font:{family:'Inter',size:10}} }
+        x: { min:0, max:5, title:{display:true,text:'SRI (Resultados)',  font:{family:'Inter',size:11}}, grid:{color:'rgba(148,163,213,.09)'}, ticks:{font:{family:'Inter',size:10}} },
+        y: { min:0, max:5, title:{display:true,text:'SCI (Capacidades)', font:{family:'Inter',size:11}}, grid:{color:'rgba(148,163,213,.09)'}, ticks:{font:{family:'Inter',size:10}} }
       },
       plugins: {
         legend: { position:'bottom', labels:{font:{family:'Inter',size:11},boxWidth:12,padding:10} },
@@ -1514,7 +1583,7 @@ function renderScatter(id, data) {
         const x3 = x.getPixelForValue(3.5);
         const y3 = y.getPixelForValue(3.5);
         ctx.save();
-        ctx.strokeStyle = 'rgba(118,118,128,.35)';
+        ctx.strokeStyle = 'rgba(148,163,213,.3)';
         ctx.lineWidth = 1;
         ctx.setLineDash([4,4]);
         ctx.beginPath(); ctx.moveTo(x3, chart.chartArea.top);    ctx.lineTo(x3, chart.chartArea.bottom); ctx.stroke();
@@ -1535,7 +1604,7 @@ function quadrantLinesPlugin() {
       const { ctx, scales: { x, y } } = chart;
       const xx = x.getPixelForValue(3.5), yy = y.getPixelForValue(3.5);
       ctx.save();
-      ctx.strokeStyle = 'rgba(118,118,128,.35)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(148,163,213,.3)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.moveTo(xx, chart.chartArea.top); ctx.lineTo(xx, chart.chartArea.bottom); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(chart.chartArea.left, yy); ctx.lineTo(chart.chartArea.right, yy); ctx.stroke();
       ctx.restore();
@@ -1594,7 +1663,7 @@ function renderVectores(id) {
     trajCount++;
     const first = cortes[0], last = cortes[cortes.length - 1];
     const delta = (last.sci + last.sri) - (first.sci + first.sri);
-    const color = delta > 0.1 ? '#1D9E75' : (delta < -0.1 ? '#c0392b' : '#888780');
+    const color = delta > 0.1 ? '#2fbf8f' : (delta < -0.1 ? '#f0988c' : '#78829f');
     const seq = full ? cortes : [first, last];
     datasets.push({
       label: last.empresa || code,
@@ -1608,7 +1677,7 @@ function renderVectores(id) {
   if (singles.length) {
     datasets.push({
       label: 'Sin trayectoria aún', data: singles, showLine: false,
-      pointStyle: 'crossRot', pointRadius: 4, borderColor: '#b0b0b0', backgroundColor: '#b0b0b0'
+      pointStyle: 'crossRot', pointRadius: 4, borderColor: '#5a6488', backgroundColor: '#5a6488'
     });
   }
   if (trajCount === 0) {
@@ -1621,8 +1690,8 @@ function renderVectores(id) {
     options: {
       responsive: true, maintainAspectRatio: false,
       scales: {
-        x: { min: 0, max: 5, title: { display: true, text: 'SRI (Resultados)', font: { family: 'Inter', size: 11 } }, grid: { color: '#f3f4f5' }, ticks: { font: { size: 10 } } },
-        y: { min: 0, max: 5, title: { display: true, text: 'SCI (Capacidades)', font: { family: 'Inter', size: 11 } }, grid: { color: '#f3f4f5' }, ticks: { font: { size: 10 } } }
+        x: { min: 0, max: 5, title: { display: true, text: 'SRI (Resultados)', font: { family: 'Inter', size: 11 } }, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 10 } } },
+        y: { min: 0, max: 5, title: { display: true, text: 'SCI (Capacidades)', font: { family: 'Inter', size: 11 } }, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 10 } } }
       },
       plugins: {
         legend: { display: false },
@@ -1638,7 +1707,7 @@ function renderVectores(id) {
 // ============================================================
 // Escala 1–9 → color (rojo → ámbar → verde CORFO)
 function irlColor(v) {
-  if (v === null || v === undefined || isNaN(v)) return '#f1f5f9';
+  if (v === null || v === undefined || isNaN(v)) return '#1c2950';
   const stops = [
     [1,'#c0392b'], [3,'#e67e22'], [5,'#f1c40f'], [7,'#7cb342'], [9,'#036a66']
   ];
@@ -1686,14 +1755,14 @@ function renderIRL() {
       datasets: [{
         label: 'Promedio portafolio (IRL 1–9)',
         data: avgVals,
-        backgroundColor: 'rgba(2,20,70,.12)',
-        borderColor: '#021446', borderWidth: 2,
-        pointBackgroundColor: '#021446', pointRadius: 4, spanGaps: false
+        backgroundColor: 'rgba(111,132,214,.20)',
+        borderColor: '#8fa3e8', borderWidth: 2,
+        pointBackgroundColor: '#8fa3e8', pointRadius: 4, spanGaps: false
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      scales: { r: { min:0, max:9, ticks:{stepSize:1, font:{size:9}}, grid:{color:'#edeeef'}, pointLabels:{font:{family:'Inter',size:12, weight:'bold'}} } },
+      scales: { r: { min:0, max:9, ticks:{stepSize:1, font:{size:9}}, grid:{color:'rgba(148,163,213,.14)'}, pointLabels:{font:{family:'Inter',size:12, weight:'bold'}} } },
       plugins: { legend: { position:'bottom', labels:{font:{family:'Inter',size:11}, boxWidth:12} } }
     }
   });
@@ -1712,7 +1781,7 @@ function renderIRL() {
       datasets: [{
         label: 'Proyectos con esta dimensión como eslabón más débil',
         data: IRL_DIMS.map(d => weakCounts[d]),
-        backgroundColor: IRL_DIMS.map((d,i) => i===2 ? '#c0392b' : '#021446')
+        backgroundColor: IRL_DIMS.map((d,i) => i===2 ? '#e2685a' : '#6f84d6')
       }]
     },
     options: {
@@ -1738,7 +1807,7 @@ function renderIRL() {
       const v = r.irl[d];
       const txt = (v === null || v === undefined) ? '' : v;
       const isWeak = (d === wk);
-      html += '<td class="px-2 py-1.5 text-center font-semibold" style="background:'+irlColor(v)+';color:'+(v>=5?'#fff':'#1a1a1a')+'">'+
+      html += '<td class="px-2 py-1.5 text-center font-semibold" style="background:'+irlColor(v)+';color:'+(v>=5||v<=2?'#fff':'#1a1a1a')+'">'+
         (isWeak ? '● ' : '') + txt + '</td>';
     });
     html += '<td class="px-2 py-1.5 text-left font-medium text-on-surface-variant">'+(r.eslabonDebil||'—')+'</td></tr>';
@@ -1752,8 +1821,8 @@ function renderIRL() {
 
 // --- Series de tiempo IRL (longitudinal) ---
 const IRL_DIM_COLORS = {
-  CRL: '#378ADD', TRL: '#021446', BRL: '#BA7517',
-  IPRL: '#7d3c98', TMRL: '#1D9E75', FRL: '#c0392b'
+  CRL: '#6f84d6', TRL: '#00a297', BRL: '#b78829',
+  IPRL: '#b98ce0', TMRL: '#4fc48f', FRL: '#e2685a'
 };
 
 function populateIRLSerieSelector() {
@@ -1862,9 +1931,10 @@ function renderIRLSeries() {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadPanel();                       // panel listo antes de renderizar (vistas longitudinales)
-  const demo = await tryLoadDemoData();    // versión pública: datos anonimizados locales
-  if (!demo) loadFromSheets();             // uso interno: Google Sheets / upload manual
+  await loadPanel();                          // panel listo antes de renderizar (vistas longitudinales)
+  if (await tryLoadDemoData()) return;        // versión pública: datos anonimizados locales
+  if (await tryLoadLocalReal()) return;       // uso local/offline: consolidado.csv real junto al HTML
+  loadFromSheets();                           // uso interno: Google Sheets / upload manual
 });
 </script>
 </body>
