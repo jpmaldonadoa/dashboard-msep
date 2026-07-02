@@ -80,9 +80,29 @@ tailwind.config = {
   .tab-btn.inactive { color:#78829f; }
   .tab-btn.inactive:hover { color:#c5cde8; }
   /* Cifras KPI en mono técnico */
-  #kpi-activos,#kpi-sci,#kpi-sri,#kpi-brecha,#kpi-riesgo,#kpi-q1,#kpi-q2,#kpi-q3,#kpi-q4 {
+  #kpi-activos,#kpi-sci,#kpi-sri,#kpi-ociosa,#kpi-frontera,#kpi-riesgo,#kpi-q1,#kpi-q2,#kpi-q3,#kpi-q4 {
     font-family:'IBM Plex Mono',monospace; font-weight:600;
   }
+  /* Señales del motor T1 */
+  .sig-badge{display:inline-flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:6px;white-space:nowrap}
+  .sig-crit{background:rgba(226,104,90,.16);color:#f0988c}
+  .sig-obs{background:rgba(183,136,41,.16);color:#e8c583}
+  .sig-ok{background:rgba(0,162,151,.14);color:#5ec8bf}
+  .sig-nd{background:rgba(148,163,213,.12);color:#8a94b8}
+  .senal-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;
+    background:rgba(148,163,213,.05);border:1px solid transparent;cursor:pointer;transition:border-color .12s}
+  .senal-item:hover{border-color:rgba(148,163,213,.25)}
+  .senal-item .nm{font-weight:600;font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .senal-item .rz{font-size:11px;color:#8a94b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%}
+  .mz-th:hover{color:#c5cde8}
+  .mz-arrow{color:#00a297}
+  .mover-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(148,163,213,.1)}
+  .mover-row:last-child{border-bottom:none}
+  .mover-row .nm{flex:1;font-size:13px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .mover-row .nm:hover{color:#5ec8bf}
+  .mover-val{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;white-space:nowrap}
+  .vig-dot{display:inline-block;width:7px;height:7px;border-radius:99px;margin-right:6px;vertical-align:1px}
   /* ---- Overrides del tema oscuro sobre utilidades Tailwind hardcodeadas ---- */
   .text-primary{color:#e8ecf8!important}
   .bg-primary{background-color:#24408f!important}
@@ -206,40 +226,75 @@ tailwind.config = {
     </div>
   </section>
 
+  <!-- SEÑALES (motor T1) — F1.1: qué atender hoy -->
+  <section class="bg-surface-container-lowest rounded-xl p-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <h3 class="font-headline font-bold text-lg text-primary">Qué atender hoy</h3>
+      <div id="senal-resumen" class="flex flex-wrap gap-2"></div>
+    </div>
+    <div id="senal-lista" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+    <p id="senal-vacio" class="hidden text-sm text-on-surface-variant py-2">Sin alertas activas: ningún proyecto gatilla las reglas del motor de señales.</p>
+    <p class="text-[11px] text-outline mt-3">Motor de señales v1 (reglas S1–S6, Base MSEP): freno IRL con resultados bajos · retroceso entre cortes · boleta por vencer · capacidad ociosa · freno de madurez · evaluación vencida. Clic en un proyecto abre su ficha.</p>
+  </section>
+
   <!-- KPIs -->
-  <section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-    <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary">
+  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="bg-surface-container-lowest p-5 rounded-xl border-l-4 border-primary">
       <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">Proyectos Activos</p>
       <div class="flex items-baseline gap-2">
         <span id="kpi-activos" class="text-3xl font-bold font-headline text-primary">—</span>
       </div>
     </div>
-    <div class="bg-surface-container-lowest p-6 rounded-xl">
+    <div class="bg-surface-container-lowest p-5 rounded-xl">
       <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">SCI Promedio</p>
       <div class="flex items-baseline gap-2">
         <span id="kpi-sci" class="text-3xl font-bold font-headline text-primary">—</span>
-        <span class="text-on-surface-variant text-xs">/ 5.0</span>
+        <span id="kpi-sci-delta" class="text-xs font-semibold"></span>
       </div>
     </div>
-    <div class="bg-surface-container-lowest p-6 rounded-xl">
+    <div class="bg-surface-container-lowest p-5 rounded-xl">
       <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">SRI Promedio</p>
       <div class="flex items-baseline gap-2">
         <span id="kpi-sri" class="text-3xl font-bold font-headline text-primary">—</span>
-        <span class="text-on-surface-variant text-xs">/ 5.0</span>
+        <span id="kpi-sri-delta" class="text-xs font-semibold"></span>
       </div>
     </div>
-    <div class="bg-surface-container-lowest p-6 rounded-xl">
-      <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">Brecha Promedio</p>
+    <div class="bg-surface-container-lowest p-5 rounded-xl">
+      <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="SCI ≥ 3.5 y SRI < 3.5">Capacidad Ociosa</p>
       <div class="flex items-baseline gap-2">
-        <span id="kpi-brecha" class="text-3xl font-bold font-headline text-secondary">—</span>
+        <span id="kpi-ociosa" class="text-3xl font-bold font-headline text-primary">—</span>
+        <span class="text-on-surface-variant text-xs">proy.</span>
       </div>
     </div>
-    <div class="bg-surface-container-lowest p-6 rounded-xl border-2 border-error/20">
+    <div class="bg-surface-container-lowest p-5 rounded-xl">
+      <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="a ±0.25 de un umbral 3.5">En Frontera</p>
+      <div class="flex items-baseline gap-2">
+        <span id="kpi-frontera" class="text-3xl font-bold font-headline text-primary">—</span>
+        <span class="text-on-surface-variant text-xs">proy.</span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-5 rounded-xl border-2 border-error/20">
       <p class="text-xs font-semibold text-error uppercase tracking-wider mb-2">Riesgo BG Alto</p>
       <div class="flex items-baseline gap-2">
         <span id="kpi-riesgo" class="text-3xl font-bold font-headline text-error">—</span>
-        <span class="text-error/70 text-xs font-medium">proyectos</span>
+        <span id="kpi-riesgo-sub" class="text-error/70 text-xs font-medium">proyectos</span>
       </div>
+    </div>
+  </section>
+
+  <!-- TENDENCIA + MOVERS (F1.5) -->
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-xl text-primary mb-1">Tendencia del portafolio</h3>
+      <p class="text-xs text-on-surface-variant mb-4">SCI y SRI promedio por trimestre · panel longitudinal</p>
+      <div style="height:240px;position:relative"><canvas id="chart-tendencia"></canvas></div>
+      <p id="tendencia-vacio" class="hidden text-xs text-on-surface-variant text-center py-6"></p>
+    </div>
+    <div class="lg:col-span-5 bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-xl text-primary mb-1">Movimientos del último corte</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Δ(SCI+SRI) entre los dos últimos cortes de cada proyecto</p>
+      <div id="movers"></div>
+      <p id="movers-vacio" class="hidden text-xs text-on-surface-variant py-4">Se requieren ≥2 cortes por proyecto para calcular movimientos.</p>
     </div>
   </section>
 
@@ -275,43 +330,52 @@ tailwind.config = {
     <h1 class="text-4xl font-extrabold font-headline tracking-tight text-primary mb-2">Matriz Comparativa de Proyectos</h1>
     <p class="text-on-surface-variant max-w-2xl">Análisis multidimensional del portafolio. Haz clic en una fila para expandir el detalle.</p>
   </div>
-  <!-- Filters -->
-  <section class="bg-surface-container-low rounded-xl p-6 flex flex-wrap items-end justify-between gap-4">
-    <div class="flex flex-wrap items-end gap-4">
+  <!-- Filters (F2.3: combinables + búsqueda + solo alertas) -->
+  <section class="bg-surface-container-low rounded-xl p-5 flex flex-wrap items-end justify-between gap-4">
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-outline mb-1.5">Buscar</label>
+        <input id="filter-busqueda" type="search" placeholder="Empresa o código…" oninput="renderMatriz()"
+          class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-3 py-2.5 w-48 shadow-sm border-0 focus:ring-2 focus:ring-primary/20"/>
+      </div>
       <div>
         <label class="block text-[10px] font-bold uppercase text-outline mb-1.5">Instrumento</label>
-        <select id="filter-instrumento" onchange="renderMatriz()" class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-4 py-2.5 w-64 shadow-sm border-0 focus:ring-2 focus:ring-primary/20">
-          <option value="">Todos los Instrumentos</option>
+        <select id="filter-instrumento" onchange="renderMatriz()" class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-3 py-2.5 w-44 shadow-sm border-0 focus:ring-2 focus:ring-primary/20">
+          <option value="">Todos</option>
         </select>
       </div>
       <div>
-        <label class="block text-[10px] font-bold uppercase text-outline mb-1.5">Ordenar por</label>
-        <select id="sort-by" onchange="renderMatriz()" class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-4 py-2.5 w-52 shadow-sm border-0 focus:ring-2 focus:ring-primary/20">
-          <option value="sci-desc">SCI (Descendente)</option>
-          <option value="sri-desc">SRI (Descendente)</option>
-          <option value="nombre-asc">Nombre (A-Z)</option>
-          <option value="cuadrante">Cuadrante</option>
-          <option value="brecha-desc">Brecha Mayor</option>
+        <label class="block text-[10px] font-bold uppercase text-outline mb-1.5">Sector</label>
+        <select id="filter-sector" onchange="renderMatriz()" class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-3 py-2.5 w-40 shadow-sm border-0 focus:ring-2 focus:ring-primary/20">
+          <option value="">Todos</option>
         </select>
       </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-outline mb-1.5">Cuadrante</label>
+        <select id="filter-cuadrante" onchange="renderMatriz()" class="bg-surface-container-lowest rounded-lg text-sm font-medium text-primary px-3 py-2.5 w-48 shadow-sm border-0 focus:ring-2 focus:ring-primary/20">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <label class="flex items-center gap-2 text-xs font-semibold text-on-surface-variant cursor-pointer pb-2.5">
+        <input type="checkbox" id="filter-alertas" onchange="renderMatriz()" class="accent-primary"> Solo con alertas
+      </label>
     </div>
     <span id="matriz-count" class="text-xs text-on-surface-variant font-medium"></span>
   </section>
-  <!-- Table -->
+  <!-- Table (F2.1/F2.2: Δ, eslabón, vigencia, señal · orden por clic) -->
   <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
     <div class="overflow-x-auto no-scrollbar">
       <table class="w-full text-left">
         <thead class="bg-surface-container-high/50">
-          <tr>
-            <th class="px-6 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider">Empresa / Proyecto</th>
-            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider">Instrumento</th>
-            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Sc. Mercado</th>
-            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Sc. Técnico</th>
-            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Aprendizajes</th>
-            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">SCI</th>
-            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">SRI</th>
-            <th class="px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Cuadrante</th>
-            <th class="px-6 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center">Riesgo BG</th>
+          <tr id="matriz-head">
+            <th data-k="empresa" class="mz-th px-6 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider cursor-pointer select-none">Empresa / Proyecto</th>
+            <th data-k="instrumento" class="mz-th px-3 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider cursor-pointer select-none">Instr.</th>
+            <th data-k="sci" class="mz-th px-3 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center cursor-pointer select-none">SCI</th>
+            <th data-k="sri" class="mz-th px-3 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center cursor-pointer select-none">SRI</th>
+            <th data-k="delta" class="mz-th px-3 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center cursor-pointer select-none" title="Δ(SCI+SRI) entre los dos últimos cortes">Δ corte</th>
+            <th data-k="eslabon" class="mz-th px-3 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center cursor-pointer select-none">Eslabón IRL</th>
+            <th data-k="vigencia" class="mz-th px-3 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center cursor-pointer select-none" title="meses desde la última evaluación">Vigencia</th>
+            <th data-k="senal" class="mz-th px-4 py-4 text-[10px] font-bold uppercase text-outline-variant tracking-wider text-center cursor-pointer select-none">Señal</th>
           </tr>
         </thead>
         <tbody id="tabla-matriz" class="divide-y divide-slate-100"></tbody>
@@ -319,6 +383,7 @@ tailwind.config = {
     </div>
     <div class="bg-surface-container-high/30 px-6 py-4 flex justify-between items-center text-xs text-on-surface-variant">
       <span id="tabla-info">Cargando…</span>
+      <span class="text-outline">clic en columna ordena · clic en fila expande detalle</span>
     </div>
   </div>
   <!-- Legend -->
@@ -332,12 +397,14 @@ tailwind.config = {
       <p class="text-xs text-on-surface-variant">Sistema de Resultados de Innovación. Promedio ponderado de scores INNOVA.</p>
     </div>
     <div class="p-4 rounded-xl bg-white border border-outline-variant/10">
-      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">Riesgo BG</h5>
-      <div class="flex gap-3 mt-2">
-        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-[10px]">&gt;90d</span></div>
-        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-amber-400"></div><span class="text-[10px]">30-90d</span></div>
-        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px]">&lt;30d</span></div>
+      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">Señal (motor S1–S6)</h5>
+      <div class="flex flex-wrap gap-2 mt-2">
+        <span class="sig-badge sig-crit">⚠ Crítica</span>
+        <span class="sig-badge sig-obs">Observación</span>
+        <span class="sig-badge sig-ok">Estable</span>
+        <span class="sig-badge sig-nd">Sin dato</span>
       </div>
+      <p class="text-[10px] text-on-surface-variant mt-2">La señal más severa gatillada define el badge; el detalle expandible lista todas.</p>
     </div>
     <div class="p-4 rounded-xl bg-white border border-outline-variant/10">
       <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">Heatmap Scores</h5>
@@ -642,6 +709,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
+// Orden por clic en encabezados de la Matriz (F2.3)
+document.querySelectorAll('#matriz-head th').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.k;
+    if (mzSortK === k) mzSortAsc = !mzSortAsc;
+    else { mzSortK = k; mzSortAsc = (k === 'empresa' || k === 'instrumento'); }
+    renderMatriz();
+  });
+});
+
 function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
@@ -886,6 +963,96 @@ function postProcess(data) {
       r.cuadranteCalc = r.cuadrante || 'Sin datos';
     }
   });
+  computeSenales(data);
+}
+
+// ============================================================
+// MOTOR DE SEÑALES (T1 · Ola 1) — reglas S1–S7 del diagnóstico
+// La señal más severa gatillada define el badge del proyecto.
+// ============================================================
+const SENAL_META = {
+  critica:     { label: '⚠ Crítica',   cls: 'sig-crit', rank: 3 },
+  observacion: { label: 'Observación', cls: 'sig-obs',  rank: 2 },
+  sindato:     { label: 'Sin dato',    cls: 'sig-nd',   rank: 1 },
+  estable:     { label: 'Estable',     cls: 'sig-ok',   rank: 0 }
+};
+const UMBRAL_VIGENCIA_MESES = 6;   // S6 — calibrable con datos reales
+const UMBRAL_RETROCESO = -0.3;     // S2
+const UMBRAL_BRECHA = 1.0;         // S4
+
+function eslabonNivel(s) { const m = /\((\d+)\)/.exec(s || ''); return m ? +m[1] : null; }
+
+function mesesDesde(fechaISO) {
+  if (!fechaISO) return null;
+  const d = new Date(fechaISO + 'T12:00:00');
+  if (isNaN(d)) return null;
+  return (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+}
+
+function computeSenales(data) {
+  data.forEach(r => {
+    // Enriquecimiento longitudinal desde el panel
+    const cortes = cortesDe(r.codigo);
+    const last = cortes[cortes.length - 1] || null;
+    const prev = cortes.length > 1 ? cortes[cortes.length - 2] : null;
+    r.lastFecha = last ? last.fecha : null;
+    r.vigenciaMeses = mesesDesde(r.lastFecha);
+    r.deltaCorte = (last && prev && last.sci != null && last.sri != null && prev.sci != null && prev.sri != null)
+      ? (last.sci + last.sri) - (prev.sci + prev.sri) : null;
+
+    const esl = eslabonNivel(r.eslabonDebil);
+    const dimEsl = (r.eslabonDebil || '').split(' ')[0];
+    const minBG = Math.min(r.bgAnt ?? 9999, r.bgCump ?? 9999);
+
+    const senales = [];
+    if (r.sci === null || r.sri === null) {
+      senales.push({ regla: 'S7', sev: 'sindato', txt: 'sin SCI/SRI evaluado' });
+    } else {
+      if (esl !== null && esl <= 2 && r.sri < 3.0)
+        senales.push({ regla: 'S1', sev: 'critica', txt: `freno ${dimEsl} (${esl}) con SRI ${r.sri.toFixed(2)}` });
+      if (r.deltaCorte !== null && r.deltaCorte < UMBRAL_RETROCESO)
+        senales.push({ regla: 'S2', sev: 'critica', txt: `retrocede ${r.deltaCorte.toFixed(2)} entre cortes` });
+      if (minBG !== 9999 && minBG < 90)
+        senales.push({ regla: 'S3', sev: 'critica', txt: `boleta vence en ${minBG} días` });
+      if (r.brecha !== null && r.brecha > UMBRAL_BRECHA)
+        senales.push({ regla: 'S4', sev: 'observacion', txt: `capacidad ociosa (brecha +${r.brecha.toFixed(2)})` });
+      if (esl !== null && esl <= 2 && !senales.some(s => s.regla === 'S1'))
+        senales.push({ regla: 'S5', sev: 'observacion', txt: `eslabón débil ${r.eslabonDebil}` });
+      if (panelLoaded && r.vigenciaMeses !== null && r.vigenciaMeses > UMBRAL_VIGENCIA_MESES)
+        senales.push({ regla: 'S6', sev: 'observacion', txt: `evaluación de hace ${r.vigenciaMeses.toFixed(1)} meses` });
+      if (panelLoaded && r.vigenciaMeses === null)
+        senales.push({ regla: 'S6', sev: 'sindato', txt: 'sin corte en el panel longitudinal' });
+    }
+    r.senales = senales;
+    r.senal = senales.reduce((m, s) => SENAL_META[s.sev].rank > SENAL_META[m].rank ? s.sev : m, 'estable');
+  });
+}
+
+function senalBadge(r, extra) {
+  const m = SENAL_META[r.senal];
+  return `<span class="sig-badge ${m.cls} ${extra || ''}">${m.label}</span>`;
+}
+
+function irAFicha(globalIdx) {
+  switchTab('ficha');
+  setTimeout(() => { document.getElementById('ficha-selector').value = globalIdx; renderFicha(); }, 80);
+}
+
+const ABREV_INSTR = { 'Innova Alta Tecnología': 'IAT', 'Crea y Valida': 'CV', 'Consolida y Expande': 'CyE', 'Eureka': 'EUR' };
+function abrevInstr(i) { return ABREV_INSTR[i] || (i || '—'); }
+
+// Promedios SCI/SRI del portafolio por trimestre (panel longitudinal)
+function tendenciaData() {
+  const byQ = {};
+  Object.values(panelByProject).forEach(arr => arr.forEach(c => {
+    if (c.sci == null || c.sri == null) return;
+    const q = c.fecha.slice(0, 4) + '-T' + Math.ceil(+c.fecha.slice(5, 7) / 3);
+    (byQ[q] = byQ[q] || { sci: [], sri: [] });
+    byQ[q].sci.push(c.sci); byQ[q].sri.push(c.sri);
+  }));
+  const qs = Object.keys(byQ).sort();
+  const m = a => a.reduce((x, y) => x + y, 0) / a.length;
+  return { labels: qs, sci: qs.map(q => m(byQ[q].sci)), sri: qs.map(q => m(byQ[q].sri)) };
 }
 
 function avg(arr, key) {
@@ -951,10 +1118,16 @@ function readFile(file) {
 // FILTERS
 // ============================================================
 function populateFilters() {
-  const instrumentos = [...new Set(portfolio.map(r => r.instrumento).filter(Boolean))].sort();
-  const sel = document.getElementById('filter-instrumento');
-  sel.innerHTML = '<option value="">Todos los Instrumentos</option>' +
-    instrumentos.map(i => `<option value="${esc(i)}">${esc(i)}</option>`).join('');
+  const fill = (id, vals) => {
+    const sel = document.getElementById(id); if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todos</option>' +
+      vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+  };
+  fill('filter-instrumento', [...new Set(portfolio.map(r => r.instrumento).filter(Boolean))].sort());
+  fill('filter-sector',      [...new Set(portfolio.map(r => r.sector).filter(Boolean))].sort());
+  fill('filter-cuadrante',   Object.keys(Q_COLORS));
 }
 
 function esc(s) {
@@ -965,21 +1138,73 @@ function esc(s) {
 // TAB 1: DASHBOARD
 // ============================================================
 function renderDashboard() {
-  // KPIs
+  // --- Señales (F1.1: qué atender hoy) ---
+  const bySev = { critica: [], observacion: [], sindato: [], estable: [] };
+  portfolio.forEach(r => bySev[r.senal].push(r));
+  document.getElementById('senal-resumen').innerHTML =
+    `<span class="sig-badge sig-crit">⚠ ${bySev.critica.length} críticas</span>` +
+    `<span class="sig-badge sig-obs">${bySev.observacion.length} en observación</span>` +
+    `<span class="sig-badge sig-ok">${bySev.estable.length} estables</span>` +
+    (bySev.sindato.length ? `<span class="sig-badge sig-nd">${bySev.sindato.length} sin dato</span>` : '');
+  const atencion = [...bySev.critica, ...bySev.observacion];
+  const listaEl = document.getElementById('senal-lista');
+  const vacioEl = document.getElementById('senal-vacio');
+  if (!atencion.length) { listaEl.innerHTML = ''; vacioEl.classList.remove('hidden'); }
+  else {
+    vacioEl.classList.add('hidden');
+    listaEl.innerHTML = atencion.slice(0, 10).map(r => {
+      const top = r.senales.find(s => s.sev === r.senal);
+      return `<div class="senal-item" onclick="irAFicha(${portfolio.indexOf(r)})">
+        ${senalBadge(r)}
+        <span class="nm text-on-surface">${esc(r.empresa || r.codigo)}</span>
+        <span class="rz">${esc(top ? top.txt : '')}</span>
+      </div>`;
+    }).join('') + (atencion.length > 10
+      ? `<div class="senal-item" style="cursor:default"><span class="rz">+ ${atencion.length - 10} más — Matriz con filtro «solo con alertas»</span></div>` : '');
+  }
+
+  // --- KPIs ---
   document.getElementById('kpi-activos').textContent = portfolio.length;
   const sciAvg = avg(portfolio, 'sci');
   const sriAvg = avg(portfolio, 'sri');
-  const brechaAvg = sciAvg - sriAvg;
-  document.getElementById('kpi-sci').textContent    = sciAvg.toFixed(2);
-  document.getElementById('kpi-sri').textContent    = sriAvg.toFixed(2);
-  const bEl = document.getElementById('kpi-brecha');
-  bEl.textContent = (brechaAvg >= 0 ? '+' : '') + brechaAvg.toFixed(2);
-  bEl.style.color = brechaAvg >= 0 ? '#4fc4bb' : '#f0988c';
+  document.getElementById('kpi-sci').textContent = sciAvg.toFixed(2);
+  document.getElementById('kpi-sri').textContent = sriAvg.toFixed(2);
 
-  const riesgoAlto = portfolio.filter(r =>
-    (r.bgAnt !== null && r.bgAnt <= 90) || (r.bgCump !== null && r.bgCump <= 90)
-  ).length;
-  document.getElementById('kpi-riesgo').textContent = riesgoAlto;
+  // Δ del promedio vs trimestre anterior (T3)
+  const t = panelLoaded ? tendenciaData() : { labels: [] };
+  const setDelta = (id, serie) => {
+    const el = document.getElementById(id); if (!el) return;
+    if (!serie || serie.length < 2) { el.textContent = ''; return; }
+    const d = serie[serie.length - 1] - serie[serie.length - 2];
+    el.textContent = (d >= 0 ? '▲ +' : '▼ ') + Math.abs(d).toFixed(2);
+    el.style.color = d >= 0 ? '#5ec8bf' : '#f0988c';
+    el.title = 'variación del promedio vs trimestre anterior';
+  };
+  setDelta('kpi-sci-delta', t.sci);
+  setDelta('kpi-sri-delta', t.sri);
+
+  // Capacidad ociosa y frontera (F1.2)
+  const evaluados = portfolio.filter(r => r.sci != null && r.sri != null);
+  document.getElementById('kpi-ociosa').textContent =
+    evaluados.filter(r => r.sci >= 3.5 && r.sri < 3.5).length;
+  document.getElementById('kpi-frontera').textContent =
+    evaluados.filter(r => Math.abs(r.sci - 3.5) <= 0.25 || Math.abs(r.sri - 3.5) <= 0.25).length;
+
+  // Riesgo BG con «sin dato» explícito (F1.3 / T4)
+  const conBG = portfolio.filter(r => r.bgAnt !== null || r.bgCump !== null);
+  const kEl = document.getElementById('kpi-riesgo'), kSub = document.getElementById('kpi-riesgo-sub');
+  if (!conBG.length) {
+    kEl.textContent = '—'; kEl.style.color = '#8a94b8';
+    kSub.textContent = 'sin dato'; kSub.style.color = '#8a94b8';
+  } else {
+    const riesgoAlto = conBG.filter(r =>
+      (r.bgAnt !== null && r.bgAnt <= 90) || (r.bgCump !== null && r.bgCump <= 90)).length;
+    kEl.textContent = riesgoAlto; kEl.style.color = '';
+    kSub.textContent = `de ${conBG.length} con dato`; kSub.style.color = '';
+  }
+
+  renderTendencia();
+  renderMovers();
 
   // Estado bar chart
   const estadoCounts = {};
@@ -1002,54 +1227,155 @@ function renderDashboard() {
 }
 
 // ============================================================
-// TAB 2: MATRIZ
+// TENDENCIA + MOVERS (F1.5)
 // ============================================================
+function renderTendencia() {
+  const canvas = document.getElementById('chart-tendencia');
+  if (!canvas) return;
+  destroyChart('chart-tendencia');
+  const vac = document.getElementById('tendencia-vacio');
+  if (!panelLoaded) {
+    if (vac) { vac.classList.remove('hidden'); vac.textContent = 'Carga el panel longitudinal para ver la tendencia del portafolio.'; }
+    return;
+  }
+  if (vac) vac.classList.add('hidden');
+  const t = tendenciaData();
+  charts['chart-tendencia'] = new Chart(canvas, {
+    type: 'line',
+    data: { labels: t.labels, datasets: [
+      { label: 'SCI', data: t.sci, borderColor: '#6f84d6', backgroundColor: '#6f84d6',
+        borderWidth: 2, pointRadius: 3.5, pointBorderColor: '#101a33', pointBorderWidth: 2, tension: .3 },
+      { label: 'SRI', data: t.sri, borderColor: '#00a297', backgroundColor: '#00a297',
+        borderWidth: 2, pointRadius: 3.5, pointBorderColor: '#101a33', pointBorderWidth: 2, tension: .3 }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 7, font: { size: 11 } } } },
+      scales: {
+        y: { min: 2.5, max: 4.5, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 10 } } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function renderMovers() {
+  const el = document.getElementById('movers'), vac = document.getElementById('movers-vacio');
+  if (!el) return;
+  const movers = portfolio.filter(r => r.deltaCorte !== null).sort((a, b) => b.deltaCorte - a.deltaCorte);
+  if (!movers.length) { el.innerHTML = ''; if (vac) vac.classList.remove('hidden'); return; }
+  if (vac) vac.classList.add('hidden');
+  const up = movers.filter(r => r.deltaCorte > 0).slice(0, 3);
+  const down = movers.filter(r => r.deltaCorte < 0).slice(-3).reverse();
+  const row = (r, upFlag) => `<div class="mover-row">
+    <span class="mover-val" style="color:${upFlag ? '#5ec8bf' : '#f0988c'}">${upFlag ? '▲' : '▼'} ${(r.deltaCorte > 0 ? '+' : '') + r.deltaCorte.toFixed(2)}</span>
+    <span class="nm text-on-surface" onclick="irAFicha(${portfolio.indexOf(r)})">${esc(r.empresa || r.codigo)}</span>
+    <span class="text-[11px] text-outline">${esc(abrevInstr(r.instrumento))}</span></div>`;
+  el.innerHTML =
+    '<p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1">Mayores avances</p>' +
+    (up.map(r => row(r, true)).join('') || '<p class="text-xs text-outline py-1">ninguno en el último corte</p>') +
+    '<p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1 mt-4">Mayores retrocesos</p>' +
+    (down.map(r => row(r, false)).join('') || '<p class="text-xs text-outline py-1">ninguno en el último corte</p>');
+}
+
+// ============================================================
+// TAB 2: MATRIZ (cockpit — F2.1/F2.2/F2.3)
+// ============================================================
+let mzSortK = 'senal', mzSortAsc = false;
+
+function mzSortVal(r, k) {
+  switch (k) {
+    case 'empresa':     return r.empresa || '';
+    case 'instrumento': return r.instrumento || '';
+    case 'sci':         return r.sci ?? -99;
+    case 'sri':         return r.sri ?? -99;
+    case 'delta':       return r.deltaCorte ?? -99;
+    case 'eslabon':     return eslabonNivel(r.eslabonDebil) ?? 99;
+    case 'vigencia':    return r.vigenciaMeses ?? 999;
+    case 'senal':       return SENAL_META[r.senal].rank * 100 - (r.sri ?? 0);
+    default:            return 0;
+  }
+}
+
 function renderMatriz() {
-  const instrFilter = document.getElementById('filter-instrumento').value;
-  const sortBy      = document.getElementById('sort-by').value;
-  let data = portfolio.filter(r => !instrFilter || r.instrumento === instrFilter);
+  const fI = document.getElementById('filter-instrumento')?.value || '';
+  const fS = document.getElementById('filter-sector')?.value || '';
+  const fQ = document.getElementById('filter-cuadrante')?.value || '';
+  const fA = document.getElementById('filter-alertas')?.checked;
+  const busq = (document.getElementById('filter-busqueda')?.value || '').trim().toLowerCase();
+
+  let data = portfolio.filter(r =>
+    (!fI || r.instrumento === fI) &&
+    (!fS || r.sector === fS) &&
+    (!fQ || r.cuadranteCalc === fQ) &&
+    (!fA || r.senal === 'critica' || r.senal === 'observacion') &&
+    (!busq || (r.empresa || '').toLowerCase().includes(busq) || (r.codigo || '').toLowerCase().includes(busq))
+  );
+
   data = [...data].sort((a, b) => {
-    if (sortBy === 'sci-desc')   return (b.sci||0) - (a.sci||0);
-    if (sortBy === 'sri-desc')   return (b.sri||0) - (a.sri||0);
-    if (sortBy === 'nombre-asc') return a.empresa.localeCompare(b.empresa);
-    if (sortBy === 'cuadrante')  return a.cuadranteCalc.localeCompare(b.cuadranteCalc);
-    if (sortBy === 'brecha-desc')return (b.brecha||0) - (a.brecha||0);
-    return 0;
+    const va = mzSortVal(a, mzSortK), vb = mzSortVal(b, mzSortK);
+    const cmp = (typeof va === 'string') ? va.localeCompare(vb) : va - vb;
+    return mzSortAsc ? cmp : -cmp;
   });
 
-  document.getElementById('matriz-count').textContent = data.length + ' proyectos';
-  document.getElementById('tabla-info').textContent   = 'Mostrando ' + data.length + ' proyectos';
+  // Indicador de orden en encabezados
+  document.querySelectorAll('#matriz-head th').forEach(th => {
+    const base = th.textContent.replace(/ [▲▼]$/, '');
+    th.innerHTML = esc(base) + (th.dataset.k === mzSortK ? ` <span class="mz-arrow">${mzSortAsc ? '▲' : '▼'}</span>` : '');
+  });
 
-  // Map to global indices for ficha navigation
+  document.getElementById('matriz-count').textContent = data.length + ' de ' + portfolio.length + ' proyectos';
+  document.getElementById('tabla-info').textContent = 'Mostrando ' + data.length + ' proyectos';
   window._matrizData = data;
+
+  const deltaCell = r => {
+    if (r.deltaCorte === null) return '<span class="text-xs text-outline">—</span>';
+    const up = r.deltaCorte >= 0;
+    return `<span class="text-xs font-bold" style="font-family:'IBM Plex Mono',monospace;color:${up ? '#5ec8bf' : '#f0988c'}">${up ? '+' : ''}${r.deltaCorte.toFixed(2)}</span>`;
+  };
+  const vigCell = r => {
+    if (r.vigenciaMeses === null) return '<span class="text-[11px] text-outline">sin dato</span>';
+    const m = r.vigenciaMeses;
+    const c = m > 9 ? '#f0988c' : m > UMBRAL_VIGENCIA_MESES ? '#e8c583' : '#5ec8bf';
+    return `<span class="text-xs" style="font-family:'IBM Plex Mono',monospace;color:${c}"><span class="vig-dot" style="background:${c}"></span>${m.toFixed(1)} m</span>`;
+  };
+  const eslCell = r => {
+    const n = eslabonNivel(r.eslabonDebil);
+    if (n === null) return '<span class="text-[11px] text-outline">—</span>';
+    return `<span class="text-xs font-semibold" style="font-family:'IBM Plex Mono',monospace;color:${n <= 2 ? '#f0988c' : '#aab4d4'}">${esc(r.eslabonDebil)}</span>`;
+  };
 
   const tbody = document.getElementById('tabla-matriz');
   tbody.innerHTML = data.map((r, idx) => {
     const qColor = Q_COLORS[r.cuadranteCalc] || '#888';
-    const minBG  = Math.min(r.bgAnt ?? 9999, r.bgCump ?? 9999);
-    const bg     = bgRisk(minBG === 9999 ? null : minBG);
     const globalIdx = portfolio.indexOf(r);
-
     return `<tr class="group hover:bg-surface-container-low cursor-pointer transition-colors" onclick="toggleRow('detail-${idx}')">
-      <td class="px-6 py-4">
-        <div class="text-sm font-bold text-primary leading-tight">${esc(r.empresa)||'—'}</div>
-        <div class="text-[11px] text-on-surface-variant">${esc(r.proyecto||r.codigo)}</div>
+      <td class="px-6 py-3.5">
+        <div class="text-sm font-bold text-primary leading-tight">
+          <span class="inline-block w-2 h-2 rounded-full mr-1.5" style="background:${qColor}" title="${esc(r.cuadranteCalc)}"></span>${esc(r.empresa) || '—'}
+        </div>
+        <div class="text-[11px] text-on-surface-variant ml-3.5">${esc(r.proyecto || r.codigo)}</div>
       </td>
-      <td class="px-4 py-4"><span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">${esc(r.instrumento||'—')}</span></td>
-      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ${scoreClass(r.scoreMercado)}">${r.scoreMercado ?? '—'}</span></td>
-      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ${scoreClass(r.scoreTecnico)}">${r.scoreTecnico ?? '—'}</span></td>
-      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ${scoreClass(r.scoreAprendizajes)}">${r.scoreAprendizajes ?? '—'}</span></td>
-      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${scoreClass(r.sci)}">${r.sci?.toFixed(2) ?? '—'}</span></td>
-      <td class="px-4 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${scoreClass(r.sri)}">${r.sri?.toFixed(2) ?? '—'}</span></td>
-      <td class="px-4 py-4"><span class="px-2 py-0.5 rounded-full text-[9px] font-bold text-white" style="background:${qColor}">${esc(r.cuadranteCalc)}</span></td>
-      <td class="px-6 py-4"><div class="flex justify-center"><div class="w-3 h-3 rounded-full ${bg.dot} ${bg.glow}" title="${bg.label}"></div></div></td>
+      <td class="px-3 py-3.5"><span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700" title="${esc(r.instrumento || '')}">${esc(abrevInstr(r.instrumento))}</span></td>
+      <td class="px-3 py-3.5 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${scoreClass(r.sci)}">${r.sci?.toFixed(2) ?? '—'}</span></td>
+      <td class="px-3 py-3.5 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${scoreClass(r.sri)}">${r.sri?.toFixed(2) ?? '—'}</span></td>
+      <td class="px-3 py-3.5 text-center">${deltaCell(r)}</td>
+      <td class="px-3 py-3.5 text-center">${eslCell(r)}</td>
+      <td class="px-3 py-3.5 text-center">${vigCell(r)}</td>
+      <td class="px-4 py-3.5 text-center">${senalBadge(r)}</td>
     </tr>
     <tr id="detail-${idx}" style="display:none" class="bg-surface-container-low/30">
-      <td colspan="9" class="px-6 py-0">
+      <td colspan="8" class="px-6 py-0">
         <div class="py-5 border-l-4 border-primary ml-1 pl-4 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="col-span-2 space-y-3">
+            ${r.senales && r.senales.length ? `<div class="flex gap-2 flex-wrap">${r.senales.map(s =>
+              `<span class="sig-badge ${SENAL_META[s.sev].cls}">${s.regla} · ${esc(s.txt)}</span>`).join('')}</div>` : ''}
             <p class="text-sm text-on-surface-variant leading-relaxed">${esc(r.resumen) || 'Sin resumen disponible.'}</p>
             <div class="flex gap-3 flex-wrap">
+              <div class="bg-white p-3 rounded-lg border border-outline-variant/10"><span class="text-[10px] font-bold text-outline block mb-1">SCORES INNOVA</span>
+                <span class="text-xs font-semibold text-primary">Mercado <span class="px-1.5 py-0.5 rounded ${scoreClass(r.scoreMercado)}">${r.scoreMercado ?? '—'}</span>
+                · Técnico <span class="px-1.5 py-0.5 rounded ${scoreClass(r.scoreTecnico)}">${r.scoreTecnico ?? '—'}</span>
+                · Aprendizajes <span class="px-1.5 py-0.5 rounded ${scoreClass(r.scoreAprendizajes)}">${r.scoreAprendizajes ?? '—'}</span></span></div>
               ${r.aporteCorfo ? `<div class="bg-white p-3 rounded-lg border border-outline-variant/10"><span class="text-[10px] font-bold text-outline block mb-1">APORTE CORFO</span><span class="text-xs font-semibold text-primary">${esc(r.aporteCorfo)}</span></div>` : ''}
               ${r.estado      ? `<div class="bg-white p-3 rounded-lg border border-outline-variant/10"><span class="text-[10px] font-bold text-outline block mb-1">ESTADO</span><span class="text-xs font-semibold text-primary">${esc(r.estado)}</span></div>` : ''}
               ${r.trl         ? `<div class="bg-white p-3 rounded-lg border border-outline-variant/10"><span class="text-[10px] font-bold text-outline block mb-1">TRL</span><span class="text-xs font-semibold text-primary">${esc(r.trl)}</span></div>` : ''}
@@ -1057,10 +1383,10 @@ function renderMatriz() {
           </div>
           <div class="bg-white/70 p-4 rounded-xl space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-widest text-outline-variant mb-2">Capacidades</h4>
-            ${[['C1 Equipo',r.c1],['C2 Negocio',r.c2],['C3 Tecnología',r.c3],['C4 Gestión',r.c4],['C5 Red',r.c5]].map(([lbl,val]) => val !== null ? `
+            ${[['C1 Absorción',r.c1],['C2 Gestión I+D',r.c2],['C3 Red',r.c3],['C4 PI',r.c4],['C5 Mercado',r.c5]].map(([lbl,val]) => val !== null ? `
               <div class="flex justify-between items-center text-xs"><span class="text-on-surface-variant">${lbl}</span><span class="font-bold">${val}</span></div>
               <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden"><div class="bg-secondary h-full" style="width:${(val/5)*100}%"></div></div>` : '').join('')}
-            <button onclick="event.stopPropagation();switchTab('ficha');setTimeout(()=>{document.getElementById('ficha-selector').value=${globalIdx};renderFicha();},80)"
+            <button onclick="event.stopPropagation();irAFicha(${globalIdx})"
               class="w-full mt-3 text-[10px] font-bold text-primary bg-primary-fixed/20 py-2 rounded uppercase tracking-widest hover:bg-primary-fixed/40 transition-colors">
               Ver Ficha Completa →
             </button>
