@@ -424,27 +424,42 @@ tailwind.config = {
     <h1 class="text-4xl font-extrabold font-headline tracking-tight text-primary">Análisis de Cuadrantes SCI×SRI</h1>
     <p class="text-on-surface-variant max-w-2xl mt-1">Posicionamiento estratégico del portafolio. Umbral: SCI = 3.5 y SRI = 3.5.</p>
   </div>
-  <!-- KPIs cuadrantes -->
+  <!-- KPIs cuadrantes (con Δ vs corte anterior — T3) -->
   <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#00a297">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Innovadores Consolidados</p>
-      <h3 id="kpi-q1" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <div class="flex items-baseline gap-2"><h3 id="kpi-q1" class="text-3xl font-headline font-bold text-primary">—</h3><span id="kpi-q1-d" class="text-xs font-bold" style="font-family:'IBM Plex Mono',monospace"></span></div>
       <p class="text-xs font-medium mt-1" style="color:#4fc4bb">SCI ≥ 3.5 y SRI ≥ 3.5</p>
     </div>
     <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#6f84d6">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Potencial Latente</p>
-      <h3 id="kpi-q2" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <div class="flex items-baseline gap-2"><h3 id="kpi-q2" class="text-3xl font-headline font-bold text-primary">—</h3><span id="kpi-q2-d" class="text-xs font-bold" style="font-family:'IBM Plex Mono',monospace"></span></div>
       <p class="text-xs font-medium mt-1" style="color:#9fb0f0">SCI ≥ 3.5 y SRI &lt; 3.5</p>
     </div>
     <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#b78829">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">En Construcción</p>
-      <h3 id="kpi-q3" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <div class="flex items-baseline gap-2"><h3 id="kpi-q3" class="text-3xl font-headline font-bold text-primary">—</h3><span id="kpi-q3-d" class="text-xs font-bold" style="font-family:'IBM Plex Mono',monospace"></span></div>
       <p class="text-xs font-medium mt-1" style="color:#e8c583">SCI &lt; 3.5 y SRI &lt; 3.5</p>
     </div>
     <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4" style="border-color:#e2685a">
       <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1">Resultados sin Base</p>
-      <h3 id="kpi-q4" class="text-3xl font-headline font-bold text-primary">—</h3>
+      <div class="flex items-baseline gap-2"><h3 id="kpi-q4" class="text-3xl font-headline font-bold text-primary">—</h3><span id="kpi-q4-d" class="text-xs font-bold" style="font-family:'IBM Plex Mono',monospace"></span></div>
       <p class="text-xs font-medium mt-1" style="color:#f0988c">SCI &lt; 3.5 y SRI ≥ 3.5</p>
+    </div>
+  </section>
+
+  <!-- FRONTERA DEL UMBRAL (F3.2) -->
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-lg text-primary mb-1">Frontera del umbral</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Banda sombreada = ±0.25 del umbral 3.5 · clic en un punto abre la ficha</p>
+      <div style="height:360px;position:relative"><canvas id="chart-frontera"></canvas></div>
+    </div>
+    <div class="lg:col-span-5 bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-lg text-primary mb-1">Próximos a cruzar</h3>
+      <p class="text-xs text-on-surface-variant mb-4">La decisión más barata del portafolio vive aquí</p>
+      <div id="frontera-lista"></div>
+      <p id="frontera-vacio" class="hidden text-xs text-on-surface-variant py-4">Ningún proyecto dentro de la banda de frontera.</p>
     </div>
   </section>
   <!-- Matriz 2x2 -->
@@ -499,44 +514,62 @@ tailwind.config = {
     <div style="height:420px;position:relative"><canvas id="chart-vectores"></canvas></div>
     <p id="vectores-empty" class="hidden text-xs text-on-surface-variant text-center py-6"></p>
   </section>
-  <!-- Acciones -->
+  <!-- Transiciones entre cuadrantes (F3.4) -->
+  <section class="bg-surface-container-lowest p-8 rounded-xl">
+    <h3 class="font-headline font-bold text-lg text-primary mb-1">Transiciones entre cuadrantes</h3>
+    <p class="text-xs text-on-surface-variant mb-5">Origen (primer corte) → destino (último corte) por proyecto · diagonal = permanece en su cuadrante</p>
+    <div class="overflow-x-auto"><table id="trans-matriz" class="text-xs border-collapse" style="min-width:560px"></table></div>
+    <p id="trans-vacio" class="hidden text-xs text-on-surface-variant py-4">Se requieren proyectos con ≥2 cortes para calcular transiciones.</p>
+  </section>
+  <!-- Acciones pobladas con proyectos reales (F3.3) -->
   <section class="space-y-4">
-    <h2 class="font-headline font-bold text-xl text-primary">Acciones Sugeridas por Cuadrante</h2>
+    <div class="flex flex-wrap items-baseline gap-3">
+      <h2 class="font-headline font-bold text-xl text-primary">Acciones Sugeridas por Cuadrante</h2>
+      <span class="text-xs text-on-surface-variant">con los proyectos del cuadrante en orden de prioridad · clic abre la ficha</span>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(0,162,151,.14)">
           <span class="material-symbols-outlined" style="color:#4fc4bb">rocket_launch</span>
         </div>
-        <div>
+        <div class="min-w-0">
           <h4 class="font-headline font-bold text-primary text-sm mb-1">Innovadores Consolidados</h4>
           <p class="text-xs text-on-surface-variant leading-relaxed">Priorizar escalamiento y visibilidad. Documentar buenas prácticas para transferencia al resto del portafolio.</p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-outline mt-3 mb-1.5">Priorizados por desempeño</p>
+          <div id="acc-consolidados" class="flex flex-wrap gap-1.5"></div>
         </div>
       </div>
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(111,132,214,.14)">
           <span class="material-symbols-outlined" style="color:#9fb0f0">build</span>
         </div>
-        <div>
+        <div class="min-w-0">
           <h4 class="font-headline font-bold text-primary text-sm mb-1">Potencial Latente</h4>
           <p class="text-xs text-on-surface-variant leading-relaxed">Asignar mentoría técnica y comercial para acelerar tracción de resultados. Revisar estrategia de mercado.</p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-outline mt-3 mb-1.5">Priorizados por brecha SCI−SRI</p>
+          <div id="acc-potencial" class="flex flex-wrap gap-1.5"></div>
         </div>
       </div>
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(183,136,41,.14)">
           <span class="material-symbols-outlined" style="color:#e8c583">history_edu</span>
         </div>
-        <div>
+        <div class="min-w-0">
           <h4 class="font-headline font-bold text-primary text-sm mb-1">En Construcción</h4>
           <p class="text-xs text-on-surface-variant leading-relaxed">Fortalecer capacidades básicas. Evaluar viabilidad y diseñar plan de mejora a 90 días.</p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-outline mt-3 mb-1.5">Priorizados por cercanía al umbral (empujables primero)</p>
+          <div id="acc-construccion" class="flex flex-wrap gap-1.5"></div>
         </div>
       </div>
       <div class="bg-white p-6 rounded-lg border border-slate-100 flex gap-4">
         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(226,104,90,.14)">
           <span class="material-symbols-outlined" style="color:#f0988c">warning</span>
         </div>
-        <div>
+        <div class="min-w-0">
           <h4 class="font-headline font-bold text-primary text-sm mb-1">Resultados sin Base</h4>
           <p class="text-xs text-on-surface-variant leading-relaxed">Auditar sostenibilidad operativa. Identificar si los resultados son replicables sin la base de capacidades.</p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-outline mt-3 mb-1.5">Priorizados por menor SCI (base más frágil primero)</p>
+          <div id="acc-resultados" class="flex flex-wrap gap-1.5"></div>
         </div>
       </div>
     </div>
@@ -549,6 +582,9 @@ tailwind.config = {
     <h2 class="font-headline text-xl font-bold text-primary">Madurez del portafolio — Innovation Readiness Level (IRL)</h2>
     <p class="text-sm text-on-surface-variant mt-1 max-w-3xl">Tercer lente operativo (modelo KTH, escala 1–9). No valora calidad ni potencial: indica cuán lejos ha avanzado cada proyecto en seis frentes y, sobre todo, <strong>cuál es el eslabón más débil</strong>. Perfil derivado de las variables MSEP (Base v4 §6.6).</p>
   </section>
+
+  <!-- Implicancia de portafolio (F4.2) -->
+  <section id="irl-implicancia" class="hidden"></section>
 
   <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white rounded-2xl border border-slate-200 p-5">
@@ -580,9 +616,19 @@ tailwind.config = {
   <section class="bg-white rounded-2xl border border-slate-200 p-5">
     <div class="flex items-center justify-between mb-3">
       <h3 class="font-headline font-bold text-primary text-sm">Mapa de calor — proyectos × dimensiones</h3>
-      <span class="text-xs text-on-surface-variant">Escala 1–9 · ● = eslabón más débil</span>
+      <span class="text-xs text-on-surface-variant">ordenado por severidad del eslabón · Δ vs corte anterior · clic abre la ficha · Escala 1–9 · ● = eslabón más débil</span>
     </div>
     <div class="overflow-x-auto"><table id="irl-heatmap" class="w-full text-xs border-collapse"></table></div>
+  </section>
+
+  <!-- Cruce cuadrante × dimensión débil (F4.4) -->
+  <section class="bg-white rounded-2xl border border-slate-200 p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-headline font-bold text-primary text-sm">Cruce estratégico — cuadrante × eslabón débil</h3>
+      <span class="text-xs text-on-surface-variant">¿dónde se concentran los frenos según la posición del proyecto?</span>
+    </div>
+    <div class="overflow-x-auto"><table id="irl-cruce" class="text-xs border-collapse" style="min-width:520px"></table></div>
+    <p id="irl-cruce-nota" class="text-[11px] text-on-surface-variant mt-3"></p>
   </section>
 
   <!-- Guía de lectura (colapsable) -->
@@ -1408,6 +1454,29 @@ function toggleRow(id) {
 // ============================================================
 // TAB 3: CUADRANTES
 // ============================================================
+// Cuadrante a partir de un par SCI/SRI (mismo umbral 3.5 del sistema)
+function cuadranteDe(sci, sri) {
+  if (sci == null || sri == null) return null;
+  if (sci >= 3.5 && sri >= 3.5) return 'Innovadores consolidados';
+  if (sci >= 3.5) return 'Potencial latente';
+  if (sri >= 3.5) return 'Resultados sin base';
+  return 'En construcción';
+}
+
+// Composición por cuadrante en un corte pasado (offset 1 = penúltimo corte de cada proyecto)
+function composicionEnCorte(offset) {
+  const counts = {}; Object.keys(Q_COLORS).forEach(k => counts[k] = 0);
+  let n = 0;
+  portfolio.forEach(r => {
+    const cortes = cortesDe(r.codigo);
+    const c = cortes[cortes.length - 1 - offset];
+    if (!c || c.sci == null || c.sri == null) return;
+    const qd = cuadranteDe(c.sci, c.sri);
+    if (qd) { counts[qd]++; n++; }
+  });
+  return { counts, n };
+}
+
 function renderCuadrantes() {
   const q = {
     'Innovadores consolidados': [],
@@ -1421,6 +1490,47 @@ function renderCuadrantes() {
   document.getElementById('kpi-q2').textContent = q['Potencial latente'].length;
   document.getElementById('kpi-q3').textContent = q['En construcción'].length;
   document.getElementById('kpi-q4').textContent = q['Resultados sin base'].length;
+
+  // Δ de composición vs corte anterior (T3)
+  const prev = panelLoaded ? composicionEnCorte(1) : { n: 0 };
+  const setQDelta = (id, name) => {
+    const el = document.getElementById(id); if (!el) return;
+    if (!prev.n) { el.textContent = ''; return; }
+    const d = q[name].length - prev.counts[name];
+    el.textContent = d === 0 ? '=' : (d > 0 ? '+' + d : String(d));
+    el.title = 'variación vs corte anterior';
+    el.style.color = d === 0 ? '#5d688c' : '#aab4d4';
+  };
+  setQDelta('kpi-q1-d', 'Innovadores consolidados');
+  setQDelta('kpi-q2-d', 'Potencial latente');
+  setQDelta('kpi-q3-d', 'En construcción');
+  setQDelta('kpi-q4-d', 'Resultados sin base');
+
+  // Acciones pobladas con proyectos priorizados (F3.3)
+  const accChips = (contId, arr, orden, metrica) => {
+    const el = document.getElementById(contId); if (!el) return;
+    const sorted = [...arr].sort(orden);
+    const MAX = 6;
+    el.innerHTML = sorted.slice(0, MAX).map(r =>
+      `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium text-white cursor-pointer hover:opacity-80 transition-opacity"
+        style="background:${Q_COLORS[r.cuadranteCalc]}" title="${esc(metrica(r))}"
+        onclick="irAFicha(${portfolio.indexOf(r)})">${esc(r.empresa || r.codigo)}</span>`).join('') +
+      (sorted.length > MAX ? `<span class="px-2 py-0.5 rounded-full text-[10px] text-on-surface-variant bg-slate-100">+${sorted.length - MAX} más</span>` : '') ||
+      '<span class="text-[11px] text-outline">sin proyectos en este cuadrante</span>';
+    if (!sorted.length) el.innerHTML = '<span class="text-[11px] text-outline">sin proyectos en este cuadrante</span>';
+  };
+  accChips('acc-consolidados', q['Innovadores consolidados'],
+    (a, b) => ((b.sci + b.sri) - (a.sci + a.sri)),
+    r => `SCI ${r.sci?.toFixed(2)} · SRI ${r.sri?.toFixed(2)}`);
+  accChips('acc-potencial', q['Potencial latente'],
+    (a, b) => (b.brecha ?? 0) - (a.brecha ?? 0),
+    r => `brecha +${r.brecha?.toFixed(2)}`);
+  accChips('acc-construccion', q['En construcción'],
+    (a, b) => Math.max(3.5 - a.sci, 3.5 - a.sri) - Math.max(3.5 - b.sci, 3.5 - b.sri),
+    r => `le falta ${Math.max(3.5 - r.sci, 3.5 - r.sri).toFixed(2)} para graduarse`);
+  accChips('acc-resultados', q['Resultados sin base'],
+    (a, b) => (a.sci ?? 9) - (b.sci ?? 9),
+    r => `SCI ${r.sci?.toFixed(2)} (base frágil)`);
 
   const pills = (arr, color) => arr.map(r =>
     `<span class="px-2 py-0.5 rounded-full text-[9px] font-medium text-white cursor-pointer hover:opacity-80 transition-opacity"
@@ -1496,6 +1606,151 @@ function renderCuadrantesCharts() {
   });
 
   renderVectores('chart-vectores');
+  renderFrontera();
+  renderTransiciones();
+}
+
+// ============================================================
+// FRONTERA DEL UMBRAL (F3.2) — banda ±0.25 y próximos a cruzar
+// ============================================================
+const BANDA_FRONTERA = 0.25;
+
+function renderFrontera() {
+  const canvas = document.getElementById('chart-frontera');
+  if (!canvas) return;
+  destroyChart('chart-frontera');
+
+  const enBanda = r => r.sci != null && r.sri != null &&
+    (Math.abs(r.sci - 3.5) <= BANDA_FRONTERA || Math.abs(r.sri - 3.5) <= BANDA_FRONTERA);
+
+  const bandPlugin = {
+    id: 'bandasFrontera',
+    beforeDatasetsDraw(ch) {
+      const { ctx, chartArea: a, scales: { x, y } } = ch;
+      ctx.save();
+      ctx.fillStyle = 'rgba(148,163,213,.10)';
+      const x1 = x.getPixelForValue(3.5 - BANDA_FRONTERA), x2 = x.getPixelForValue(3.5 + BANDA_FRONTERA);
+      const y1 = y.getPixelForValue(3.5 + BANDA_FRONTERA), y2 = y.getPixelForValue(3.5 - BANDA_FRONTERA);
+      ctx.fillRect(x1, a.top, x2 - x1, a.bottom - a.top);
+      ctx.fillRect(a.left, y1, a.right - a.left, y2 - y1);
+      ctx.strokeStyle = 'rgba(148,163,213,.3)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+      const xm = x.getPixelForValue(3.5), ym = y.getPixelForValue(3.5);
+      ctx.beginPath(); ctx.moveTo(xm, a.top); ctx.lineTo(xm, a.bottom);
+      ctx.moveTo(a.left, ym); ctx.lineTo(a.right, ym); ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  const datasets = Object.entries(Q_COLORS).map(([qName, color]) => ({
+    label: qName,
+    data: portfolio
+      .filter(r => r.cuadranteCalc === qName && r.sci !== null && r.sri !== null)
+      .map(r => ({ x: r.sri, y: r.sci, gi: portfolio.indexOf(r), empresa: r.empresa, front: enBanda(r) })),
+    backgroundColor: c => (c.raw && c.raw.front) ? color : color + '44',
+    borderColor: c => (c.raw && c.raw.front) ? '#0b1226' : color + '77',
+    borderWidth: c => (c.raw && c.raw.front) ? 2 : 1,
+    pointRadius: c => (c.raw && c.raw.front) ? 7 : 4,
+    pointHoverRadius: 9
+  }));
+
+  charts['chart-frontera'] = new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      onClick(e, els, ch) {
+        const hit = ch.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true)[0];
+        if (hit) {
+          const raw = ch.data.datasets[hit.datasetIndex].data[hit.index];
+          if (raw && raw.gi != null) irAFicha(raw.gi);
+        }
+      },
+      scales: {
+        x: { min: 1, max: 5, title: { display: true, text: 'SRI (Resultados)', font: { size: 11 } }, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 10 } } },
+        y: { min: 1, max: 5, title: { display: true, text: 'SCI (Capacidades)', font: { size: 11 } }, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 10 } } }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10.5 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: c => `${c.raw.empresa || ''} — SRI ${c.raw.x?.toFixed(2)} · SCI ${c.raw.y?.toFixed(2)}${c.raw.front ? ' · EN FRONTERA' : ''}` } }
+      }
+    },
+    plugins: [bandPlugin]
+  });
+
+  // Lista «próximos a cruzar» (ambas direcciones)
+  const lista = document.getElementById('frontera-lista');
+  const vacio = document.getElementById('frontera-vacio');
+  if (!lista) return;
+  const items = [];
+  portfolio.forEach(r => {
+    if (r.sci == null || r.sri == null) return;
+    const ejes = [];
+    if (r.sci >= 3.5 - BANDA_FRONTERA && r.sci < 3.5) ejes.push({ eje: 'SCI', dist: 3.5 - r.sci, dir: 'up' });
+    if (r.sri >= 3.5 - BANDA_FRONTERA && r.sri < 3.5) ejes.push({ eje: 'SRI', dist: 3.5 - r.sri, dir: 'up' });
+    if (r.sci >= 3.5 && r.sci <= 3.5 + BANDA_FRONTERA) ejes.push({ eje: 'SCI', dist: r.sci - 3.5, dir: 'down' });
+    if (r.sri >= 3.5 && r.sri <= 3.5 + BANDA_FRONTERA) ejes.push({ eje: 'SRI', dist: r.sri - 3.5, dir: 'down' });
+    if (ejes.length) items.push({ r, ejes, min: Math.min(...ejes.map(e => e.dist)) });
+  });
+  items.sort((a, b) => a.min - b.min);
+  if (!items.length) { lista.innerHTML = ''; vacio.classList.remove('hidden'); return; }
+  vacio.classList.add('hidden');
+  const MAXF = 9;
+  lista.innerHTML = items.slice(0, MAXF).map(({ r, ejes }) => {
+    const gi = portfolio.indexOf(r);
+    const tags = ejes.map(e => e.dir === 'up'
+      ? `<span class="mover-val" style="color:#5ec8bf" title="a ${e.dist.toFixed(2)} de cruzar el umbral hacia arriba">${e.eje} ▲ ${e.dist.toFixed(2)}</span>`
+      : `<span class="mover-val" style="color:#e8c583" title="a ${e.dist.toFixed(2)} de caer bajo el umbral">${e.eje} ▼ ${e.dist.toFixed(2)}</span>`).join(' ');
+    return `<div class="mover-row" style="cursor:pointer" onclick="irAFicha(${gi})">
+      <span class="inline-block w-2 h-2 rounded-full" style="background:${Q_COLORS[r.cuadranteCalc] || '#555'}"></span>
+      <span class="nm text-on-surface">${esc(r.empresa || r.codigo)}</span>${tags}</div>`;
+  }).join('') + (items.length > MAXF ? `<p class="text-[11px] text-outline mt-2">+ ${items.length - MAXF} más dentro de la banda</p>` : '') +
+  `<p class="text-[11px] text-outline mt-3">▲ a punto de cruzar hacia arriba (empujable) · ▼ sosteniéndose sobre el umbral (riesgo de caer)</p>`;
+}
+
+// ============================================================
+// TRANSICIONES ENTRE CUADRANTES (F3.4) — primer → último corte
+// ============================================================
+const Q_RANK = { 'En construcción': 0, 'Potencial latente': 1, 'Resultados sin base': 1, 'Innovadores consolidados': 2 };
+const Q_SHORT = { 'Innovadores consolidados': 'Consolidados', 'Potencial latente': 'Pot. latente', 'En construcción': 'Construcción', 'Resultados sin base': 'Sin base' };
+
+function renderTransiciones() {
+  const tbl = document.getElementById('trans-matriz');
+  if (!tbl) return;
+  const vacio = document.getElementById('trans-vacio');
+  const ORDER = Object.keys(Q_COLORS);
+  const M = {}; ORDER.forEach(o => { M[o] = {}; ORDER.forEach(d => M[o][d] = 0); });
+  let n = 0;
+  portfolio.forEach(r => {
+    const cs = cortesDe(r.codigo).filter(c => c.sci != null && c.sri != null);
+    if (cs.length < 2) return;
+    const o = cuadranteDe(cs[0].sci, cs[0].sri);
+    const d = cuadranteDe(cs[cs.length - 1].sci, cs[cs.length - 1].sri);
+    if (o && d) { M[o][d]++; n++; }
+  });
+  if (!n) { tbl.innerHTML = ''; if (vacio) vacio.classList.remove('hidden'); return; }
+  if (vacio) vacio.classList.add('hidden');
+
+  let html = '<thead><tr><th class="text-left py-2 pr-4 text-on-surface-variant font-semibold">Origen ↓ · Destino →</th>' +
+    ORDER.map(d => `<th class="px-4 py-2 text-center font-semibold" style="color:${Q_COLORS[d]}">${Q_SHORT[d]}</th>`).join('') +
+    '<th class="px-4 py-2 text-center text-on-surface-variant font-semibold">Total</th></tr></thead><tbody>';
+  ORDER.forEach(o => {
+    const tot = ORDER.reduce((a, d) => a + M[o][d], 0);
+    html += `<tr style="border-top:1px solid rgba(148,163,213,.12)">
+      <td class="py-2.5 pr-4 font-semibold" style="color:${Q_COLORS[o]}">${Q_SHORT[o]}</td>` +
+      ORDER.map(d => {
+        const v = M[o][d];
+        if (!v) return '<td class="px-4 py-2.5 text-center" style="color:#3d4664">·</td>';
+        const diag = o === d, mejora = Q_RANK[d] - Q_RANK[o];
+        const bg = diag ? 'rgba(148,163,213,.10)' : mejora > 0 ? 'rgba(0,162,151,.18)' : mejora < 0 ? 'rgba(226,104,90,.16)' : 'rgba(183,136,41,.14)';
+        const col = diag ? '#aab4d4' : mejora > 0 ? '#5ec8bf' : mejora < 0 ? '#f0988c' : '#e8c583';
+        return `<td class="px-4 py-2.5 text-center font-bold" style="font-family:'IBM Plex Mono',monospace;background:${bg};color:${col};border-radius:6px">${v}</td>`;
+      }).join('') +
+      `<td class="px-4 py-2.5 text-center text-on-surface-variant" style="font-family:'IBM Plex Mono',monospace">${tot}</td></tr>`;
+  });
+  html += `</tbody><tfoot><tr><td colspan="${ORDER.length + 2}" class="pt-3 text-[11px] text-outline">
+    ${n} proyectos con ≥2 cortes · <span style="color:#5ec8bf">verde</span> = subió de nivel ·
+    <span style="color:#f0988c">coral</span> = bajó · <span style="color:#e8c583">ámbar</span> = lateral · gris = permanece</td></tr></tfoot>`;
+  tbl.innerHTML = html;
 }
 
 // ============================================================
@@ -1876,7 +2131,7 @@ function renderScatter(id, data) {
     label: qName,
     data: data
       .filter(r => r.cuadranteCalc === qName && r.sci !== null && r.sri !== null)
-      .map(r => ({ x: r.sri, y: r.sci, empresa: r.empresa })),
+      .map(r => ({ x: r.sri, y: r.sci, empresa: r.empresa, gi: portfolio.indexOf(r) })),
     backgroundColor: color + '99',
     borderColor: color,
     borderWidth: 1.5,
@@ -1889,6 +2144,13 @@ function renderScatter(id, data) {
     data: { datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
+      onClick(e, els, ch) {
+        const hit = ch.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true)[0];
+        if (hit) {
+          const raw = ch.data.datasets[hit.datasetIndex].data[hit.index];
+          if (raw && raw.gi != null && raw.gi >= 0) irAFicha(raw.gi);
+        }
+      },
       scales: {
         x: { min:0, max:5, title:{display:true,text:'SRI (Resultados)',  font:{family:'Inter',size:11}}, grid:{color:'rgba(148,163,213,.09)'}, ticks:{font:{family:'Inter',size:10}} },
         y: { min:0, max:5, title:{display:true,text:'SCI (Capacidades)', font:{family:'Inter',size:11}}, grid:{color:'rgba(148,163,213,.09)'}, ticks:{font:{family:'Inter',size:10}} }
@@ -2099,6 +2361,7 @@ function renderIRL() {
     const m = (r.eslabonDebil || '').match(/^([A-Z]+)/);
     if (m && weakCounts[m[1]] !== undefined) weakCounts[m[1]]++;
   });
+  renderImplicancia(weakCounts);
   destroyChart('chart-irl-weakest');
   charts['chart-irl-weakest'] = new Chart(document.getElementById('chart-irl-weakest'), {
     type: 'bar',
@@ -2117,17 +2380,29 @@ function renderIRL() {
     }
   });
 
-  // --- Heatmap: proyectos × dimensiones ---
-  const rows = portfolio.filter(r => r.irl && IRL_DIMS.some(d => r.irl[d] !== null));
+  // --- Heatmap: proyectos × dimensiones (F4.3: severidad + Δ + clic → ficha) ---
+  const deltaEslabon = r => {
+    const cs = cortesDe(r.codigo);
+    if (cs.length < 2) return null;
+    const wL = weakestOf(cs[cs.length - 1].irl, ''), wP = weakestOf(cs[cs.length - 2].irl, '');
+    if (wL.val == null || wP.val == null) return null;
+    return wL.val - wP.val;
+  };
+  const rows = portfolio
+    .filter(r => r.irl && IRL_DIMS.some(d => r.irl[d] !== null))
+    .sort((a, b) => (eslabonNivel(a.eslabonDebil) ?? 99) - (eslabonNivel(b.eslabonDebil) ?? 99) ||
+                    (a.empresa || '').localeCompare(b.empresa || ''));
   let html = '<thead><tr class="text-left text-on-surface-variant">' +
     '<th class="py-2 pr-3 font-semibold sticky left-0 bg-white">Proyecto</th>' +
     IRL_DIMS.map(d => '<th class="px-2 py-2 text-center font-semibold">'+d+'</th>').join('') +
-    '<th class="px-2 py-2 text-left font-semibold">Eslabón débil</th></tr></thead><tbody>';
+    '<th class="px-2 py-2 text-left font-semibold">Eslabón débil</th>' +
+    '<th class="px-2 py-2 text-center font-semibold" title="variación del nivel del eslabón débil vs corte anterior">Δ</th></tr></thead><tbody>';
   rows.forEach(r => {
     const weakDim = (r.eslabonDebil || '').match(/^([A-Z]+)/);
     const wk = weakDim ? weakDim[1] : '';
     const label = (r.empresa || r.proyecto || r.codigo || '—');
-    html += '<tr class="border-t border-slate-100">' +
+    const gi = portfolio.indexOf(r);
+    html += '<tr class="border-t border-slate-100 cursor-pointer hover:bg-surface-container-low transition-colors" onclick="irAFicha('+gi+')">' +
       '<td class="py-1.5 pr-3 sticky left-0 bg-white max-w-[220px] truncate" title="'+label.replace(/"/g,'&quot;')+'">'+label+'</td>';
     IRL_DIMS.forEach(d => {
       const v = r.irl[d];
@@ -2136,13 +2411,106 @@ function renderIRL() {
       html += '<td class="px-2 py-1.5 text-center font-semibold" style="background:'+irlColor(v)+';color:'+(v>=5||v<=2?'#fff':'#1a1a1a')+'">'+
         (isWeak ? '● ' : '') + txt + '</td>';
     });
-    html += '<td class="px-2 py-1.5 text-left font-medium text-on-surface-variant">'+(r.eslabonDebil||'—')+'</td></tr>';
+    const dE = deltaEslabon(r);
+    const dTxt = dE === null ? '<span style="color:#5d688c">—</span>'
+      : dE > 0 ? '<span style="color:#5ec8bf;font-weight:700">+'+dE+'</span>'
+      : dE < 0 ? '<span style="color:#f0988c;font-weight:700">'+dE+'</span>'
+      : '<span style="color:#8a94b8">=</span>';
+    html += '<td class="px-2 py-1.5 text-left font-medium text-on-surface-variant">'+(r.eslabonDebil||'—')+'</td>' +
+      '<td class="px-2 py-1.5 text-center" style="font-family:\'IBM Plex Mono\',monospace">'+dTxt+'</td></tr>';
   });
   html += '</tbody>';
   heatmap.innerHTML = html;
 
+  renderCruce();
   populateIRLSerieSelector();
   renderIRLSeries();
+}
+
+// ============================================================
+// IMPLICANCIA DE PORTAFOLIO (F4.2) — de la concentración a la acción
+// ============================================================
+const IMPLICANCIA_UMBRAL = 0.5;   // share mínimo para gatillar acción transversal
+const ACCION_TRANSVERSAL = {
+  CRL:  'un programa transversal de validación con clientes y pilotos pagados',
+  TRL:  'aceleración técnica y acceso compartido a infraestructura de escalamiento',
+  BRL:  'un programa transversal de modelo de negocio y acompañamiento comercial',
+  IPRL: 'una estrategia colectiva de propiedad intelectual (diagnóstico y protección)',
+  TMRL: 'fortalecimiento de equipos y gobernanza de proyecto a nivel de cartera',
+  FRL:  'articulación de financiamiento por fase (rondas, instrumentos públicos)'
+};
+
+function renderImplicancia(weakCounts) {
+  const el = document.getElementById('irl-implicancia');
+  if (!el) return;
+  const total = Object.values(weakCounts).reduce((a, b) => a + b, 0);
+  if (!total) { el.classList.add('hidden'); return; }
+  const [dim, count] = Object.entries(weakCounts).sort((a, b) => b[1] - a[1])[0];
+  const share = count / total;
+  el.classList.remove('hidden');
+  if (share < IMPLICANCIA_UMBRAL) {
+    el.innerHTML = `<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 text-xs text-on-surface-variant">
+      Sin concentración dominante del eslabón débil (mayor: <strong class="text-on-surface">${dim}</strong>, ${count} de ${total} proyectos).
+      Las intervenciones eficientes son caso a caso; revisar el mapa de calor.</div>`;
+    return;
+  }
+  const afectados = portfolio.filter(r => (r.eslabonDebil || '').startsWith(dim));
+  el.innerHTML = `<div class="rounded-2xl p-6" style="background:linear-gradient(135deg,rgba(226,104,90,.10),rgba(183,136,41,.07));border:1px solid rgba(226,104,90,.3)">
+    <div class="flex items-start gap-4">
+      <span class="material-symbols-outlined mt-0.5" style="color:#f0988c">campaign</span>
+      <div class="min-w-0">
+        <p class="text-[10px] font-bold uppercase tracking-widest" style="color:#f0988c">Implicancia de portafolio · concentración ≥ ${Math.round(IMPLICANCIA_UMBRAL*100)}%</p>
+        <h3 class="font-headline font-bold text-primary text-lg mt-1">${dim} frena a ${count} de ${total} proyectos (${Math.round(share*100)}%)</h3>
+        <p class="text-sm text-on-surface-variant mt-1 max-w-3xl">El patrón excede el caso a caso: amerita <strong class="text-on-surface">${ACCION_TRANSVERSAL[dim] || 'una acción transversal de portafolio'}</strong>.</p>
+        <div class="flex flex-wrap gap-1.5 mt-3">${afectados.map(r =>
+          `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium text-white cursor-pointer hover:opacity-80 transition-opacity"
+            style="background:${Q_COLORS[r.cuadranteCalc] || '#555'}" title="eslabón ${esc(r.eslabonDebil)}"
+            onclick="irAFicha(${portfolio.indexOf(r)})">${esc(r.empresa || r.codigo)}</span>`).join('')}</div>
+      </div>
+    </div></div>`;
+}
+
+// ============================================================
+// CRUCE CUADRANTE × DIMENSIÓN DÉBIL (F4.4)
+// ============================================================
+function renderCruce() {
+  const tbl = document.getElementById('irl-cruce');
+  if (!tbl) return;
+  const ORDER = Object.keys(Q_COLORS);
+  const M = {}; ORDER.forEach(qn => { M[qn] = {}; IRL_DIMS.forEach(d => M[qn][d] = 0); });
+  let n = 0;
+  portfolio.forEach(r => {
+    const m = (r.eslabonDebil || '').match(/^([A-Z]+)/);
+    if (!m || !M[r.cuadranteCalc] || M[r.cuadranteCalc][m[1]] === undefined) return;
+    M[r.cuadranteCalc][m[1]]++; n++;
+  });
+  if (!n) { tbl.innerHTML = '<tr><td class="text-xs text-on-surface-variant py-4">Sin datos de eslabón débil.</td></tr>'; return; }
+  const maxV = Math.max(...ORDER.flatMap(qn => IRL_DIMS.map(d => M[qn][d])));
+  let html = '<thead><tr><th class="text-left py-2 pr-4 text-on-surface-variant font-semibold">Cuadrante</th>' +
+    IRL_DIMS.map(d => `<th class="px-3 py-2 text-center font-semibold text-on-surface-variant">${d}</th>`).join('') + '</tr></thead><tbody>';
+  ORDER.forEach(qn => {
+    html += `<tr style="border-top:1px solid rgba(148,163,213,.12)">
+      <td class="py-2 pr-4 font-semibold" style="color:${Q_COLORS[qn]}">${Q_SHORT[qn]}</td>` +
+      IRL_DIMS.map(d => {
+        const v = M[qn][d];
+        if (!v) return '<td class="px-3 py-2 text-center" style="color:#3d4664">·</td>';
+        const alpha = .12 + .38 * (v / maxV);
+        return `<td class="px-3 py-2 text-center font-bold" style="font-family:'IBM Plex Mono',monospace;background:rgba(0,162,151,${alpha.toFixed(2)});color:#7fe0d6">${v}</td>`;
+      }).join('') + '</tr>';
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+
+  // Lectura automática: el freno de los consolidados
+  const nota = document.getElementById('irl-cruce-nota');
+  if (nota) {
+    const cons = M['Innovadores consolidados'];
+    const totC = IRL_DIMS.reduce((a, d) => a + cons[d], 0);
+    if (totC) {
+      const [dTop, vTop] = IRL_DIMS.map(d => [d, cons[d]]).sort((a, b) => b[1] - a[1])[0];
+      nota.innerHTML = vTop ? `<strong class="text-on-surface">Lectura:</strong> ${vTop} de los ${totC} Innovadores Consolidados tienen su eslabón débil en <strong class="text-on-surface">${dTop}</strong> — su consolidación descansa sobre esa base y conviene vigilarla.` : '';
+    } else nota.textContent = '';
+  }
 }
 
 // --- Series de tiempo IRL (longitudinal) ---
