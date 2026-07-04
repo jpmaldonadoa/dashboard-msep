@@ -234,7 +234,7 @@ tailwind.config = {
     </div>
     <div id="senal-lista" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
     <p id="senal-vacio" class="hidden text-sm text-on-surface-variant py-2">Sin alertas activas: ningún proyecto gatilla las reglas del motor de señales.</p>
-    <p class="text-[11px] text-outline mt-3">Motor de señales v1 (reglas S1–S6, Base MSEP): freno IRL con resultados bajos · retroceso entre cortes · boleta por vencer · capacidad ociosa · freno de madurez · evaluación vencida. Clic en un proyecto abre su ficha.</p>
+    <p class="text-[11px] text-outline mt-3">Motor de señales v1 (reglas S1–S8, Base MSEP): freno IRL con resultados bajos · retroceso entre cortes · boleta por vencer · capacidad ociosa · freno de madurez · evaluación vencida · hito IAT pendiente. Clic en un proyecto abre su ficha.</p>
   </section>
 
   <!-- KPIs -->
@@ -439,7 +439,7 @@ tailwind.config = {
       <p class="text-xs text-on-surface-variant">Sistema de Resultados de Innovación. Promedio ponderado de scores INNOVA.</p>
     </div>
     <div class="p-4 rounded-xl bg-white border border-outline-variant/10">
-      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">Señal (motor S1–S6)</h5>
+      <h5 class="text-[10px] font-bold uppercase text-outline mb-2 tracking-widest">Señal (motor S1–S8)</h5>
       <div class="flex flex-wrap gap-2 mt-2">
         <span class="sig-badge sig-crit">⚠ Crítica</span>
         <span class="sig-badge sig-obs">Observación</span>
@@ -1040,6 +1040,10 @@ function normalizeRow(row) {
     gastoID:          col('Gasto I+D') || '',
     dotacion:         n(col('Dotación total','Dotacion total')),
     outputs:          n(col('Outputs de conocimiento')),
+    // Fase 3 — hitos IAT (condicionales por instrumento)
+    hitoEstrategia:      col('Hito estrategia mercado') || '',
+    hitoImplementacion:  col('Hito implementación productiva','Hito implementacion productiva') || '',
+    hitoCertificacion:   col('Hito certificación','Hito certificacion') || '',
     irl: {
       CRL:  n(r['IRL CRL']),
       TRL:  n(r['IRL TRL']),
@@ -1127,6 +1131,10 @@ function computeSenales(data) {
         senales.push({ regla: 'S6', sev: 'observacion', txt: `evaluación de hace ${r.vigenciaMeses.toFixed(1)} meses` });
       if (panelLoaded && r.vigenciaMeses === null)
         senales.push({ regla: 'S6', sev: 'sindato', txt: 'sin corte en el panel longitudinal' });
+      // S8 (Fase 3) — proyecto IAT con un hito obligatorio explícitamente pendiente
+      if (/innova alta/i.test(r.instrumento || '') &&
+          [r.hitoEstrategia, r.hitoImplementacion, r.hitoCertificacion].some(h => h === 'Pendiente'))
+        senales.push({ regla: 'S8', sev: 'observacion', txt: 'hito IAT pendiente' });
     }
     r.senales = senales;
     r.senal = senales.reduce((m, s) => SENAL_META[s.sev].rank > SENAL_META[m].rank ? s.sev : m, 'estable');
@@ -2179,6 +2187,20 @@ function renderFicha() {
       </div>
     </div>` : ''}
 
+    <!-- Hitos IAT (Fase 3 — condicional a instrumento IAT o datos presentes) -->
+    ${(/innova alta/i.test(r.instrumento || '') || r.hitoEstrategia || r.hitoImplementacion || r.hitoCertificacion) ? `
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-primary mb-1 flex items-center gap-2">
+        <span class="material-symbols-outlined">flag</span>Hitos IAT
+      </h3>
+      <p class="text-xs text-on-surface-variant mb-4 pb-4 border-b border-slate-100">Compromisos obligatorios para Innova Alta Tecnología (opcionales en otros instrumentos).</p>
+      <div class="space-y-1">
+        ${hitoRow('Estrategia de introducción al mercado', r.hitoEstrategia)}
+        ${hitoRow('Implementación productiva del proceso', r.hitoImplementacion)}
+        ${hitoRow('Certificación o aprobación regulatoria', r.hitoCertificacion)}
+      </div>
+    </div>` : ''}
+
     <!-- Boletas de garantía -->
     <div class="bg-surface-container-lowest p-8 rounded-xl">
       <h3 class="font-headline font-bold text-primary mb-6 flex items-center gap-2">
@@ -2380,6 +2402,21 @@ function dataRow(label, val) {
   return `<div class="flex justify-between items-center py-1 border-b border-slate-50">
     <span class="text-xs text-slate-500 uppercase font-medium">${label}</span>
     <span class="text-sm font-semibold text-primary text-right max-w-[60%]">${esc(val)}</span>
+  </div>`;
+}
+
+// Fila de hito IAT con semáforo (Fase 3)
+function hitoRow(label, val) {
+  const map = {
+    'Cumplido':      { c: '#5ec8bf', ic: 'check_circle' },
+    'En desarrollo': { c: '#e8c583', ic: 'pending' },
+    'Pendiente':     { c: '#f0988c', ic: 'radio_button_unchecked' },
+  };
+  const m = map[val] || { c: '#8a94b8', ic: 'remove' };
+  return `<div class="flex justify-between items-center py-1.5 border-b border-slate-50">
+    <span class="text-xs text-slate-500 uppercase font-medium max-w-[62%]">${label}</span>
+    <span class="text-sm font-semibold text-right flex items-center gap-1.5" style="color:${m.c}">
+      <span class="material-symbols-outlined" style="font-size:18px">${m.ic}</span>${esc(val || 'no reportado')}</span>
   </div>`;
 }
 
