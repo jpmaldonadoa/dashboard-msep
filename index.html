@@ -282,6 +282,37 @@ tailwind.config = {
     </div>
   </section>
 
+  <!-- KPIs SIE — Talento, impacto y territorio (Fase 1: capa SIE del consolidado) -->
+  <section class="mt-6">
+    <div class="flex items-baseline justify-between mb-3">
+      <h3 class="font-headline font-bold text-lg text-primary">Talento, impacto y territorio</h3>
+      <span class="text-[11px] text-outline uppercase tracking-widest">indicadores SIE de cartera</span>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div class="bg-surface-container-lowest p-5 rounded-xl border-l-4 border-secondary">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de doctores declarados en los proyectos">Doctores en cartera</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-doctores" class="text-3xl font-bold font-headline text-primary">—</span><span class="text-on-surface-variant text-xs">personas</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de profesionales técnicos especializados">Personal especializado</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-personal" class="text-3xl font-bold font-headline text-primary">—</span><span class="text-on-surface-variant text-xs">personas</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de ahorros acumulados declarados (CLP)">Ahorros acumulados</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-ahorros" class="text-2xl font-bold font-headline text-primary">—</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Promedio de satisfacción con el ejecutivo (escala 1–10)">NPS ejecutivo</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-nps" class="text-3xl font-bold font-headline text-primary">—</span><span id="kpi-nps-sub" class="text-on-surface-variant text-xs">/ 10</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Regiones distintas de ejecución">Cobertura territorial</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-regiones" class="text-3xl font-bold font-headline text-primary">—</span><span class="text-on-surface-variant text-xs">regiones</span></div>
+      </div>
+    </div>
+    <div id="sie-regiones" class="mt-4 flex flex-wrap gap-2"></div>
+  </section>
+
   <!-- TENDENCIA + MOVERS (F1.5) -->
   <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
     <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
@@ -978,6 +1009,17 @@ function normalizeRow(row) {
     objetivos:        r['Objetivos principales'] || '',
     observacion:      r['Observación ejecutivo'] || r['Observacion ejecutivo'] || '',
     recomendaciones:  r['Recomendaciones'] || '',
+    // Capa SIE + descriptores (Fase 1 — ya en el consolidado, no se leían)
+    regionEjec:       col('Región ejecución','Region ejecucion') || '',
+    regionImpacto:    col('Región impacto','Region impacto') || '',
+    doctores:         n(col('Doctores en el proyecto')),
+    personalEsp:      n(col('Personal especializado')),
+    nps:              n(col('Satisfacción NPS','Satisfaccion NPS')),
+    ahorros:          col('Monto ahorros acumulado') || '',
+    tipoInnovacion:   col('Tipo innovación','Tipo innovacion') || '',
+    estadoPrototipo:  col('Estado del prototipo') || '',
+    validacionReal:   col('Validación datos reales','Validacion datos reales') || '',
+    partners:         col('Partners tecnológicos','Partners tecnologicos') || '',
     irl: {
       CRL:  n(r['IRL CRL']),
       TRL:  n(r['IRL TRL']),
@@ -1245,6 +1287,37 @@ function renderDashboard() {
     kEl.textContent = riesgoAlto; kEl.style.color = '';
     kSub.textContent = `de ${conBG.length} con dato`; kSub.style.color = '';
   }
+
+  // KPIs SIE (Fase 1) — talento, impacto y territorio
+  (function renderSIE() {
+    const money = s => { const x = Number(String(s || '').replace(/[^\d.-]/g, '')); return isNaN(x) ? 0 : x; };
+    const fmtCLP = v => 'CLP ' + Math.round(v).toLocaleString('es-CL');
+    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const sumInt = k => portfolio.reduce((s, r) => s + (r[k] || 0), 0);
+    const hasDoc = portfolio.some(r => r.doctores != null);
+    const hasEsp = portfolio.some(r => r.personalEsp != null);
+    setTxt('kpi-doctores', hasDoc ? sumInt('doctores') : '—');
+    setTxt('kpi-personal', hasEsp ? sumInt('personalEsp') : '—');
+    const ahorrosTot = portfolio.reduce((s, r) => s + money(r.ahorros), 0);
+    setTxt('kpi-ahorros', ahorrosTot > 0 ? fmtCLP(ahorrosTot) : '—');
+    const npsVals = portfolio.map(r => r.nps).filter(v => v != null);
+    const npsEl = document.getElementById('kpi-nps'), npsSub = document.getElementById('kpi-nps-sub');
+    if (npsEl) {
+      if (npsVals.length) { npsEl.textContent = (npsVals.reduce((a, b) => a + b, 0) / npsVals.length).toFixed(1); }
+      else { npsEl.textContent = '—'; if (npsSub) npsSub.textContent = 'sin dato'; }
+    }
+    const regCounts = {};
+    portfolio.forEach(r => { const rg = (r.regionEjec || '').trim(); if (rg) regCounts[rg] = (regCounts[rg] || 0) + 1; });
+    const regKeys = Object.keys(regCounts);
+    setTxt('kpi-regiones', regKeys.length || '—');
+    const regEl = document.getElementById('sie-regiones');
+    if (regEl) {
+      regEl.innerHTML = regKeys.length
+        ? Object.entries(regCounts).sort((a, b) => b[1] - a[1]).map(([k, v]) =>
+            `<span class="px-2 py-0.5 rounded-full text-[11px] bg-slate-100 text-slate-700">${esc(k)} <b style="font-family:'IBM Plex Mono',monospace">${v}</b></span>`).join('')
+        : '<span class="text-[11px] text-outline">Sin dato de región en el consolidado — se poblará cuando el formulario capture la capa SIE.</span>';
+    }
+  })();
 
   renderTendencia();
   renderMovers();
@@ -2049,9 +2122,33 @@ function renderFicha() {
           ${dataRow('PI registrada',    r.tienePI)}
           ${dataRow('Tipo PI',          r.tipoPI)}
           ${dataRow('TRL estimado',     r.trl)}
+          ${dataRow('Tipo innovación',  r.tipoInnovacion)}
+          ${dataRow('Estado prototipo', r.estadoPrototipo)}
+          ${dataRow('Validación datos reales', r.validacionReal)}
+          ${dataRow('Partners tecnológicos',   r.partners)}
         </div>
       </div>
     </div>
+
+    <!-- Talento, impacto y territorio (Fase 1 — capa SIE) -->
+    ${(r.regionEjec || r.regionImpacto || r.doctores != null || r.personalEsp != null || r.ahorros || r.nps != null) ? `
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100 flex items-center gap-2">
+        <span class="material-symbols-outlined">groups</span>Talento, impacto y territorio
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+        <div class="space-y-3">
+          ${dataRow('Región ejecución',  r.regionEjec)}
+          ${dataRow('Región impacto',    r.regionImpacto)}
+          ${dataRow('Ahorros acumulados', r.ahorros)}
+        </div>
+        <div class="space-y-3">
+          ${dataRow('Doctores en el proyecto', r.doctores != null ? String(r.doctores) : '')}
+          ${dataRow('Personal especializado',  r.personalEsp != null ? String(r.personalEsp) : '')}
+          ${dataRow('Satisfacción NPS ejecutivo', r.nps != null ? r.nps + ' / 10' : '')}
+        </div>
+      </div>
+    </div>` : ''}
 
     <!-- Boletas de garantía -->
     <div class="bg-surface-container-lowest p-8 rounded-xl">
