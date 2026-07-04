@@ -1059,6 +1059,9 @@ function normalizeRow(row) {
     infra:            col('Infraestructura habilitada') || '',
     b2b:              col('Alianzas B2B') || '',
     feedbackNPS:      col('Feedback NPS') || '',
+    // Cierre gaps §12 — vigilancia y tendencia tecnológica
+    vigilancia:       col('Vigilancia tecnológica','Vigilancia tecnologica') || '',
+    tendencia:        col('Tendencia tecnológica','Tendencia tecnologica') || '',
     irl: {
       CRL:  n(r['IRL CRL']),
       TRL:  n(r['IRL TRL']),
@@ -2248,6 +2251,18 @@ function renderFicha() {
         ${dataRow('Países de aterrizaje',    r.paises)}
         ${dataRow('Infraestructura habilitada', r.infra)}
         ${dataRow('Feedback sobre el ejecutivo', r.feedbackNPS)}
+      </div>
+    </div>` : ''}
+
+    <!-- Vigilancia y tendencias tecnológicas (cierre gaps §12) -->
+    ${(r.vigilancia || r.tendencia) ? `
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100 flex items-center gap-2">
+        <span class="material-symbols-outlined">radar</span>Vigilancia y tendencias tecnológicas
+      </h3>
+      <div class="space-y-3">
+        ${dataRow('Vigilancia tecnológica', r.vigilancia)}
+        ${dataRow('Tendencia tecnológica', r.tendencia)}
       </div>
     </div>` : ''}
 
