@@ -298,23 +298,18 @@ tailwind.config = {
     </div>
   </section>
 
-  <!-- Charts row 1 -->
-  <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-    <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
-      <h3 class="font-headline font-bold text-xl text-primary mb-6">Distribución por Estado</h3>
-      <div style="height:260px;position:relative"><canvas id="chart-estado"></canvas></div>
-    </div>
-    <div class="lg:col-span-5 bg-surface-container-lowest p-8 rounded-xl flex flex-col">
-      <h3 class="font-headline font-bold text-xl text-primary mb-6">Distribución por Instrumento</h3>
-      <div style="height:260px;position:relative"><canvas id="chart-instrumento"></canvas></div>
-    </div>
+  <!-- Composición administrativa degradada a chips (F1.4) -->
+  <section class="bg-surface-container-lowest p-5 rounded-xl space-y-2.5">
+    <div class="flex flex-wrap items-center gap-1.5" id="chips-estado"></div>
+    <div class="flex flex-wrap items-center gap-1.5" id="chips-instrumento"></div>
   </section>
 
   <!-- Charts row 2 -->
   <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10">
     <div class="bg-surface-container-lowest p-8 rounded-xl">
-      <h3 class="font-headline font-bold text-xl text-primary mb-6">Scores Promedio por Dimensión</h3>
-      <div style="height:300px;position:relative"><canvas id="chart-radar"></canvas></div>
+      <h3 class="font-headline font-bold text-xl text-primary mb-1">Distribución de SCI y SRI</h3>
+      <p class="text-xs text-on-surface-variant mb-4">los promedios ocultan los extremos — esta es la forma real del portafolio</p>
+      <div style="height:280px;position:relative"><canvas id="chart-dist"></canvas></div>
     </div>
     <div class="bg-surface-container-lowest p-8 rounded-xl">
       <h3 class="font-headline font-bold text-xl text-primary mb-1">SCI vs SRI — Dispersión</h3>
@@ -490,8 +485,9 @@ tailwind.config = {
   <!-- Charts -->
   <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div class="bg-surface-container-lowest p-8 rounded-xl">
-      <h3 class="font-headline font-bold text-lg text-primary mb-6">Distribución por Cuadrante</h3>
-      <div style="height:280px;position:relative"><canvas id="chart-cuadrantes-doughnut"></canvas></div>
+      <h3 class="font-headline font-bold text-lg text-primary mb-1">Composición del portafolio</h3>
+      <p class="text-xs text-on-surface-variant mb-5">corte anterior vs actual — el flujo entre cuadrantes de un vistazo</p>
+      <div style="height:250px;position:relative"><canvas id="chart-composicion"></canvas></div>
     </div>
     <div class="bg-surface-container-lowest p-8 rounded-xl">
       <h3 class="font-headline font-bold text-lg text-primary mb-6">Brecha SCI − SRI por Proyecto</h3>
@@ -588,8 +584,9 @@ tailwind.config = {
 
   <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white rounded-2xl border border-slate-200 p-5">
-      <h3 class="font-headline font-bold text-primary text-sm mb-3">Perfil promedio del portafolio</h3>
-      <div style="height:320px;position:relative"><canvas id="chart-irl-radar"></canvas></div>
+      <h3 class="font-headline font-bold text-primary text-sm mb-0.5">Profundidad del freno por dimensión</h3>
+      <p class="text-xs text-on-surface-variant mb-3">cuántos proyectos están en nivel crítico (≤2), en desarrollo (3–4) o avanzado (≥5)</p>
+      <div style="height:300px;position:relative"><canvas id="chart-irl-profundidad"></canvas></div>
     </div>
     <div class="bg-white rounded-2xl border border-slate-200 p-5">
       <h3 class="font-headline font-bold text-primary text-sm mb-3">Eslabón más débil (frecuencia en la cartera)</h3>
@@ -1252,21 +1249,20 @@ function renderDashboard() {
   renderTendencia();
   renderMovers();
 
-  // Estado bar chart
-  const estadoCounts = {};
-  portfolio.forEach(r => { if (r.estado) estadoCounts[r.estado] = (estadoCounts[r.estado]||0) + 1; });
-  renderBarHorizontal('chart-estado', Object.keys(estadoCounts), Object.values(estadoCounts), '#00a297');
+  // Estado e instrumento degradados a chips compactos (F1.4)
+  const chipStrip = (contId, titulo, counts) => {
+    const el = document.getElementById(contId); if (!el) return;
+    el.innerHTML = `<span class="text-[10px] font-bold uppercase tracking-widest text-outline mr-1">${titulo}</span>` +
+      Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([k, v]) =>
+        `<span class="px-2 py-0.5 rounded-full text-[11px] bg-slate-100 text-slate-700">${esc(k)} <b style="font-family:'IBM Plex Mono',monospace">${v}</b></span>`).join('');
+  };
+  const estadoCounts = {}; portfolio.forEach(r => { if (r.estado) estadoCounts[r.estado] = (estadoCounts[r.estado]||0) + 1; });
+  const instrCounts = {}; portfolio.forEach(r => { if (r.instrumento) instrCounts[r.instrumento] = (instrCounts[r.instrumento]||0) + 1; });
+  chipStrip('chips-estado', 'Estado', estadoCounts);
+  chipStrip('chips-instrumento', 'Instrumento', instrCounts);
 
-  // Instrumento doughnut
-  const instrCounts = {};
-  portfolio.forEach(r => { if (r.instrumento) instrCounts[r.instrumento] = (instrCounts[r.instrumento]||0) + 1; });
-  renderDoughnut('chart-instrumento', Object.keys(instrCounts), Object.values(instrCounts),
-    ['#00a297','#6f84d6','#e2685a','#b78829','#4fc48f','#b98ce0','#8fa3e8']);
-
-  // Radar promedio portafolio
-  const rLabels = ['Mercado','Técnico','Aprendizajes','C1 Absorción','C2 Gestión','C3 Red','C4 PI','C5 Mercado'];
-  const rKeys   = ['scoreMercado','scoreTecnico','scoreAprendizajes','c1','c2','c3','c4','c5'];
-  renderRadar('chart-radar', rLabels, rKeys.map(k => avg(portfolio, k)), null);
+  // Distribución de SCI y SRI (reemplaza al radar de promedios — F1.4)
+  renderDistribucion();
 
   // Scatter
   renderScatter('chart-scatter', portfolio);
@@ -1322,6 +1318,144 @@ function renderMovers() {
     (up.map(r => row(r, true)).join('') || '<p class="text-xs text-outline py-1">ninguno en el último corte</p>') +
     '<p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1 mt-4">Mayores retrocesos</p>' +
     (down.map(r => row(r, false)).join('') || '<p class="text-xs text-outline py-1">ninguno en el último corte</p>');
+}
+
+// ============================================================
+// FICHA DE DECISIÓN (Ola 3 — F5.1/F5.2/F5.4) + DISTRIBUCIÓN (F1.4)
+// ============================================================
+const SENAL_BORDER = { critica: '#e2685a', observacion: '#b78829', sindato: '#4a5578', estable: '#00a297' };
+const ACCION_CUADRANTE = {
+  'Innovadores consolidados': 'Preparar escalamiento y documentar buenas prácticas transferibles al resto del portafolio.',
+  'Potencial latente': 'Mentoría comercial para convertir la capacidad instalada en resultados.',
+  'En construcción': 'Plan de mejora a 90 días sobre las capacidades básicas más débiles.',
+  'Resultados sin base': 'Auditar la sostenibilidad de los resultados y reforzar la base de capacidades.'
+};
+
+function sintesisDe(r) {
+  const f2v = v => v == null ? '—' : v.toFixed(2);
+  let pos = `<strong class="text-on-surface">${esc(r.cuadranteCalc)}</strong> · SCI ${f2v(r.sci)} · SRI ${f2v(r.sri)}`;
+  if (r.sci != null && r.sri != null) {
+    const fr = [];
+    if (r.sci >= 3.5 - BANDA_FRONTERA && r.sci < 3.5) fr.push(`a ${(3.5 - r.sci).toFixed(2)} de cruzar SCI ▲`);
+    if (r.sri >= 3.5 - BANDA_FRONTERA && r.sri < 3.5) fr.push(`a ${(3.5 - r.sri).toFixed(2)} de cruzar SRI ▲`);
+    if (r.sci >= 3.5 && r.sci <= 3.5 + BANDA_FRONTERA) fr.push(`sostiene SCI por ${(r.sci - 3.5).toFixed(2)} ▼`);
+    if (r.sri >= 3.5 && r.sri <= 3.5 + BANDA_FRONTERA) fr.push(`sostiene SRI por ${(r.sri - 3.5).toFixed(2)} ▼`);
+    if (fr.length) pos += `<br><span style="color:#e8c583">En frontera: ${fr.join(' · ')}</span>`;
+  }
+  let tend;
+  if (r.deltaCorte == null) tend = 'Sin trayectoria aún (un solo corte en el panel).';
+  else if (r.deltaCorte > 0.1) tend = `<span style="color:#5ec8bf">Avanza</span>: Δ(SCI+SRI) <strong class="text-on-surface">+${r.deltaCorte.toFixed(2)}</strong> en el último corte.`;
+  else if (r.deltaCorte < -0.1) tend = `<span style="color:#f0988c">Retrocede</span>: Δ(SCI+SRI) <strong class="text-on-surface">${r.deltaCorte.toFixed(2)}</strong> en el último corte.`;
+  else tend = `Estable: Δ(SCI+SRI) ${r.deltaCorte.toFixed(2)} en el último corte.`;
+  if (r.vigenciaMeses != null && r.vigenciaMeses > UMBRAL_VIGENCIA_MESES)
+    tend += ` <span style="color:#e8c583">Dato de hace ${r.vigenciaMeses.toFixed(1)} meses.</span>`;
+  const en = eslabonNivel(r.eslabonDebil);
+  const dim = (r.eslabonDebil || '').split(' ')[0];
+  const freno = r.eslabonDebil
+    ? `Eslabón más débil: <strong class="text-on-surface">${esc(r.eslabonDebil)}</strong>` +
+      (en != null && en <= 2 ? ' <span style="color:#f0988c">— nivel crítico</span>' : '')
+    : 'Sin perfil IRL disponible.';
+  let accion;
+  const sn = r.senales || [];
+  if (sn.some(x => x.regla === 'S3')) accion = 'Gestionar de inmediato la renovación de la boleta de garantía.';
+  else if (sn.some(x => x.regla === 'S2')) accion = 'Revisar en profundidad el retroceso del último corte antes de cualquier otra intervención.';
+  else if (sn.some(x => x.regla === 'S1')) accion = `Intervenir el freno ${dim}: ${ACCION_TRANSVERSAL[dim] || 'acción focalizada sobre el eslabón débil'}.`;
+  else if (en != null && en <= 2) accion = `Trabajar el eslabón ${dim}: ${ACCION_TRANSVERSAL[dim] || 'acción focalizada sobre el eslabón débil'}.`;
+  else accion = ACCION_CUADRANTE[r.cuadranteCalc] || 'Mantener el seguimiento regular.';
+  return { pos, tend, freno, accion };
+}
+
+// Ciclo de vida de la recomendación (F5.4) — persistencia local del navegador
+function recoEstado(codigo) {
+  try { return localStorage.getItem('msep_reco_' + codigo) || 'nueva'; } catch (e) { return 'nueva'; }
+}
+function setRecoEstado(codigo, v) {
+  try { localStorage.setItem('msep_reco_' + codigo, v); } catch (e) {}
+  renderFicha();
+}
+
+// Vector del proyecto en el cuadrante + serie SCI/SRI (F5.2)
+function renderFichaVector(r) {
+  destroyChart('chart-ficha-vector');
+  destroyChart('chart-ficha-serie');
+  const cs = cortesDe(r.codigo).filter(c => c.sci != null && c.sri != null);
+  const canvasV = document.getElementById('chart-ficha-vector');
+  const notaV = document.getElementById('ficha-vector-nota');
+  if (canvasV) {
+    if (!cs.length) {
+      canvasV.parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-xs text-on-surface-variant">Sin cortes en el panel para este proyecto.</div>';
+    } else {
+      const delta = cs.length > 1 ? (cs[cs.length-1].sci + cs[cs.length-1].sri) - (cs[0].sci + cs[0].sri) : 0;
+      const color = cs.length < 2 ? '#8a94b8' : delta > 0.1 ? '#2fbf8f' : delta < -0.1 ? '#f0988c' : '#78829f';
+      charts['chart-ficha-vector'] = new Chart(canvasV, {
+        type: 'scatter',
+        data: { datasets: [{
+          label: r.empresa || r.codigo,
+          data: cs.map(c => ({ x: c.sri, y: c.sci, fecha: c.fecha })),
+          showLine: true, tension: 0, borderColor: color, borderWidth: 2,
+          pointRadius: cs.map((_, i) => i === cs.length - 1 ? 6 : 3.5),
+          pointBackgroundColor: cs.map((_, i) => i === cs.length - 1 ? color : color + '66'),
+          pointBorderColor: color, _isVector: cs.length > 1
+        }]},
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false },
+            tooltip: { callbacks: { label: c => `${c.raw.fecha} — SRI ${c.raw.x.toFixed(2)} · SCI ${c.raw.y.toFixed(2)}` } } },
+          scales: {
+            x: { min: 1, max: 5, title: { display: true, text: 'SRI', font: { size: 10 } }, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 9 } } },
+            y: { min: 1, max: 5, title: { display: true, text: 'SCI', font: { size: 10 } }, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 9 } } }
+          }
+        },
+        plugins: [quadrantLinesPlugin(), arrowHeadsPlugin()]
+      });
+      if (notaV) notaV.textContent = cs.length < 2
+        ? 'Un solo corte evaluado: aún sin trayectoria.'
+        : `${cs.length} cortes · Δ(SCI+SRI) acumulado ${(delta > 0 ? '+' : '') + delta.toFixed(2)}`;
+    }
+  }
+  const canvasS = document.getElementById('chart-ficha-serie');
+  if (canvasS) {
+    if (cs.length < 2) {
+      canvasS.parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-xs text-on-surface-variant">Se requieren ≥2 cortes para la serie temporal.</div>';
+    } else {
+      charts['chart-ficha-serie'] = new Chart(canvasS, {
+        type: 'line',
+        data: { labels: cs.map(c => c.fecha), datasets: [
+          { label: 'SCI', data: cs.map(c => c.sci), borderColor: '#6f84d6', backgroundColor: '#6f84d6',
+            borderWidth: 2, pointRadius: 3.5, pointBorderColor: '#101a33', pointBorderWidth: 2, tension: .25 },
+          { label: 'SRI', data: cs.map(c => c.sri), borderColor: '#00a297', backgroundColor: '#00a297',
+            borderWidth: 2, pointRadius: 3.5, pointBorderColor: '#101a33', pointBorderWidth: 2, tension: .25 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 7, font: { size: 10.5 } } } },
+          scales: { y: { min: 1, max: 5, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { font: { size: 9 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9 } } } }
+        }
+      });
+    }
+  }
+}
+
+// Distribución de SCI y SRI por tramos (F1.4 — la forma, no el promedio)
+function renderDistribucion() {
+  const canvas = document.getElementById('chart-dist');
+  if (!canvas) return;
+  destroyChart('chart-dist');
+  const bins = [[1,1.5],[1.5,2],[2,2.5],[2.5,3],[3,3.5],[3.5,4],[4,4.5],[4.5,5.01]];
+  const labels = bins.map(b => b[0].toFixed(1) + '–' + Math.min(b[1], 5).toFixed(1));
+  const hist = key => bins.map(([a, b]) => portfolio.filter(x => x[key] != null && x[key] >= a && x[key] < b).length);
+  charts['chart-dist'] = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: 'SCI', data: hist('sci'), backgroundColor: '#6f84d6', borderRadius: 3, borderSkipped: 'start' },
+      { label: 'SRI', data: hist('sri'), backgroundColor: '#00a297', borderRadius: 3, borderSkipped: 'start' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.raw} proyectos` } } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 2 }, grid: { color: 'rgba(148,163,213,.09)' } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } } }
+    }
+  });
 }
 
 // ============================================================
@@ -1557,24 +1691,26 @@ function renderCuadrantesCharts() {
   };
   portfolio.forEach(r => { if (counts[r.cuadranteCalc] !== undefined) counts[r.cuadranteCalc]++; });
 
-  destroyChart('chart-cuadrantes-doughnut');
-  charts['chart-cuadrantes-doughnut'] = new Chart(
-    document.getElementById('chart-cuadrantes-doughnut'), {
-    type: 'doughnut',
-    data: {
-      labels: Object.keys(counts),
-      datasets: [{
-        data: Object.values(counts),
-        backgroundColor: Object.keys(counts).map(k => Q_COLORS[k]),
-        borderWidth: 0,
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '60%',
-      plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 10 } } }
-    }
-  });
+  // Composición apilada: corte anterior vs actual (F3.1)
+  destroyChart('chart-composicion');
+  const compCanvas = document.getElementById('chart-composicion');
+  if (compCanvas) {
+    const prevC = panelLoaded ? composicionEnCorte(1) : { n: 0 };
+    const compLabels = prevC.n ? ['Corte anterior', 'Último corte'] : ['Último corte'];
+    charts['chart-composicion'] = new Chart(compCanvas, {
+      type: 'bar',
+      data: { labels: compLabels, datasets: Object.keys(counts).map(k => ({
+        label: k,
+        data: prevC.n ? [prevC.counts[k], counts[k]] : [counts[k]],
+        backgroundColor: Q_COLORS[k], borderColor: '#101a33', borderWidth: 2, borderRadius: 4
+      }))},
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        scales: { x: { stacked: true, grid: { color: 'rgba(148,163,213,.09)' }, ticks: { stepSize: 5 } },
+                  y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } } },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 10.5 }, boxWidth: 10, padding: 8 } } }
+      }
+    });
+  }
 
   // Brecha bar — top 15 by |brecha|
   const bData = portfolio
@@ -1775,6 +1911,36 @@ function renderFicha() {
   const qColor = Q_COLORS[r.cuadranteCalc] || '#888';
   const minBG  = Math.min(r.bgAnt ?? 9999, r.bgCump ?? 9999);
 
+  // Síntesis de decisión (F5.1) + recomendaciones con ciclo de vida (F5.4)
+  const sint = sintesisDe(r);
+  const est = recoEstado(r.codigo);
+  const EST_META = {
+    nueva:    { lbl: 'Nueva',    bg: 'rgba(183,136,41,.16)',  fg: '#e8c583' },
+    en_curso: { lbl: 'En curso', bg: 'rgba(111,132,214,.16)', fg: '#9fb0f0' },
+    atendida: { lbl: 'Atendida', bg: 'rgba(0,162,151,.16)',   fg: '#5ec8bf' }
+  };
+  const estM = EST_META[est] || EST_META.nueva;
+  const recoBlock = (r.recomendaciones || r.observacion) ? `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${r.recomendaciones ? `
+      <div class="bg-white border-l-4 p-6 rounded-r-xl" style="border-color:#8fa3e8">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h4 class="font-headline font-bold text-primary">Recomendaciones del ejecutivo</h4>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-outline" style="font-family:'IBM Plex Mono',monospace">${r.lastFecha ? 'corte ' + r.lastFecha : 'corte s/f'}</span>
+            <span class="sig-badge" style="background:${estM.bg};color:${estM.fg}">${estM.lbl}</span>
+            <select onchange="setRecoEstado('${esc(r.codigo)}', this.value)"
+              class="text-[11px] bg-surface-container-low border border-outline-variant/40 rounded px-1.5 py-0.5 text-on-surface-variant">
+              ${Object.entries(EST_META).map(([k, m]) => `<option value="${k}" ${k === est ? 'selected' : ''}>${m.lbl}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <p class="text-on-surface-variant text-sm leading-relaxed">${esc(r.recomendaciones)}</p>
+        <p class="text-[10px] text-outline mt-3">El estado se guarda localmente en este navegador (piloto — la captura compartida llega con el Flujo 4).</p>
+      </div>` : ''}
+      ${r.observacion ? textCard('Observación Ejecutivo', r.observacion, 'border-[#e2685a]') : ''}
+    </div>` : '';
+
   document.getElementById('ficha-content').innerHTML = `
     <!-- Header gradient card -->
     <div class="bg-gradient-to-br from-primary to-primary-container p-8 rounded-xl text-white shadow-lg overflow-hidden relative">
@@ -1795,6 +1961,43 @@ function renderFicha() {
           ${r.montoTotal   ? `<div class="text-center"><div class="text-[10px] text-white/50 uppercase tracking-widest mb-1">Monto Total</div><div class="text-xl font-bold font-headline">${esc(r.montoTotal)}</div></div>` : ''}
           ${r.aporteCorfo  ? `<div class="text-center"><div class="text-[10px] text-white/50 uppercase tracking-widest mb-1">Aporte CORFO</div><div class="text-xl font-bold font-headline">${esc(r.aporteCorfo)}</div></div>` : ''}
         </div>
+      </div>
+    </div>
+
+    <!-- Síntesis de decisión (F5.1) -->
+    <div class="bg-surface-container-lowest rounded-xl p-6 border-l-4" style="border-color:${SENAL_BORDER[r.senal] || '#4a5578'}">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        ${senalBadge(r)}
+        <span class="text-xs text-on-surface-variant">síntesis generada por el motor de señales · último corte: ${r.lastFecha || 'sin corte en panel'}</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-4">
+        <div><p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1">Posición</p>
+          <p class="text-sm text-on-surface-variant leading-relaxed">${sint.pos}</p></div>
+        <div><p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1">Tendencia</p>
+          <p class="text-sm text-on-surface-variant leading-relaxed">${sint.tend}</p></div>
+        <div><p class="text-[10px] font-bold uppercase tracking-widest text-outline mb-1">Freno IRL</p>
+          <p class="text-sm text-on-surface-variant leading-relaxed">${sint.freno}</p></div>
+      </div>
+      <div class="pt-3" style="border-top:1px solid rgba(148,163,213,.14)">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-outline">Próxima acción sugerida</span>
+        <p class="text-sm font-semibold text-on-surface mt-1">${sint.accion}</p>
+      </div>
+    </div>
+
+    ${recoBlock}
+
+    <!-- Trayectoria del proyecto (F5.2) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-surface-container-lowest p-6 rounded-xl">
+        <h3 class="font-headline font-bold text-primary mb-1">Vector en el cuadrante</h3>
+        <p class="text-xs text-on-surface-variant mb-3">trayectoria SCI×SRI · primer → último corte</p>
+        <div style="height:270px;position:relative"><canvas id="chart-ficha-vector"></canvas></div>
+        <p id="ficha-vector-nota" class="text-xs text-on-surface-variant mt-2"></p>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl">
+        <h3 class="font-headline font-bold text-primary mb-1">Serie SCI / SRI por corte</h3>
+        <p class="text-xs text-on-surface-variant mb-3">el doble eje del proyecto en el tiempo</p>
+        <div style="height:270px;position:relative"><canvas id="chart-ficha-serie"></canvas></div>
       </div>
     </div>
 
@@ -1829,8 +2032,9 @@ function renderFicha() {
     <!-- Radar + Datos comerciales -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
-        <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100">Radar de Capacidades C1–C5</h3>
+        <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100">Capacidades C1–C5 — vs pares del instrumento</h3>
         <div style="height:300px;position:relative"><canvas id="chart-ficha-radar"></canvas></div>
+        <p id="ficha-radar-nota" class="text-xs text-on-surface-variant mt-3"></p>
       </div>
       <div class="lg:col-span-5 bg-surface-container-lowest p-8 rounded-xl">
         <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100">Datos Comerciales y Capital</h3>
@@ -1864,10 +2068,6 @@ function renderFicha() {
     <div class="space-y-4">
       ${r.resumen     ? textCard('Resumen del Proyecto',   r.resumen,     'border-primary')           : ''}
       ${r.objetivos   ? textCard('Objetivos Principales',  r.objetivos,   'border-secondary')          : ''}
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        ${r.observacion     ? textCard('Observación Ejecutivo', r.observacion,   'border-[#e2685a]')   : ''}
-        ${r.recomendaciones ? textCard('Recomendaciones',       r.recomendaciones,'border-primary-container') : ''}
-      </div>
     </div>
 
     <!-- Evolución de madurez IRL del proyecto -->
@@ -1906,26 +2106,46 @@ function renderFicha() {
       'Sin datos de capacidades C1–C5 para este proyecto.</div>';
   } else {
     // Solo promedia proyectos que tienen datos reales (avg() ya excluye nulls)
+    // Comparación justa: pares del mismo instrumento (F5.3); fallback a portafolio si son pocos
+    const pares = portfolio.filter(p => p.instrumento === r.instrumento &&
+      [p.c1, p.c2, p.c3, p.c4, p.c5].some(v => v !== null));
+    const usaPares = pares.length >= 3;
+    const base = usaPares ? pares : portfolio;
+    const baseLabel = usaPares
+      ? `Promedio pares ${abrevInstr(r.instrumento)} (n=${pares.length})`
+      : 'Promedio portafolio (pares insuficientes)';
     const portAvg = {
-      c1: avg(portfolio,'c1'), c2: avg(portfolio,'c2'), c3: avg(portfolio,'c3'),
-      c4: avg(portfolio,'c4'), c5: avg(portfolio,'c5')
+      c1: avg(base,'c1'), c2: avg(base,'c2'), c3: avg(base,'c3'),
+      c4: avg(base,'c4'), c5: avg(base,'c5')
     };
+    // Capacidad más débil del proyecto, destacada (F5.3)
+    const capLabels = ['C1 Absorción','C2 Gestión I+D','C3 Red','C4 PI','C5 Mercado'];
+    let minIdx = -1;
+    capVals.forEach((v, i) => { if (v !== null && (minIdx < 0 || v < capVals[minIdx])) minIdx = i; });
+    const notaEl = document.getElementById('ficha-radar-nota');
+    if (notaEl && minIdx >= 0) {
+      const promArr = [portAvg.c1, portAvg.c2, portAvg.c3, portAvg.c4, portAvg.c5];
+      const gap = promArr[minIdx] - capVals[minIdx];
+      notaEl.innerHTML = `Capacidad más débil: <strong style="color:#f0988c">${capLabels[minIdx]} (${capVals[minIdx]})</strong> · ` +
+        (gap > 0 ? `a ${gap.toFixed(1)} puntos del promedio de ${usaPares ? 'sus pares' : 'portafolio'}` : `en línea o sobre el promedio de ${usaPares ? 'sus pares' : 'portafolio'}`);
+    }
     destroyChart('chart-ficha-radar');
     charts['chart-ficha-radar'] = new Chart(radarCanvas, {
       type: 'radar',
       data: {
-        labels: ['C1 Absorción','C2 Gestión I+D','C3 Red','C4 PI','C5 Mercado'],
+        labels: capLabels,
         datasets: [
           {
             label: r.empresa || 'Proyecto',
             data: capVals,          // null donde no hay dato; Chart.js lo omite
             backgroundColor: 'rgba(111,132,214,.20)',
             borderColor: '#8fa3e8', borderWidth: 2,
-            pointBackgroundColor: '#8fa3e8', pointRadius: 4,
+            pointBackgroundColor: capVals.map((v, i) => i === minIdx ? '#e2685a' : '#8fa3e8'),
+            pointRadius: capVals.map((v, i) => i === minIdx ? 6 : 4),
             spanGaps: false
           },
           {
-            label: 'Promedio Portafolio',
+            label: baseLabel,
             data: [portAvg.c1, portAvg.c2, portAvg.c3, portAvg.c4, portAvg.c5],
             backgroundColor: 'rgba(0,162,151,.14)',
             borderColor: '#00a297', borderWidth: 1.5,
@@ -1945,6 +2165,7 @@ function renderFicha() {
     });
   } // fin else hasCapData
 
+  renderFichaVector(r);
   renderFichaIRL(r.codigo);
 }
 
@@ -2327,33 +2548,31 @@ function renderIRL() {
   if (!heatmap) return;
 
   if (!hasIrlData()) {
-    destroyChart('chart-irl-radar'); destroyChart('chart-irl-weakest');
+    destroyChart('chart-irl-profundidad'); destroyChart('chart-irl-weakest');
     heatmap.innerHTML = '<tr><td class="text-xs text-on-surface-variant py-6 text-center">' +
       'El consolidado cargado no incluye columnas IRL. Regenera el consolidado con el Flujo 4 (Paso 11b) para ver el perfil de madurez.</td></tr>';
     return;
   }
 
-  // --- Radar: promedio del portafolio ---
-  const avgVals = IRL_DIMS.map(d => irlAvg(d));
-  destroyChart('chart-irl-radar');
-  charts['chart-irl-radar'] = new Chart(document.getElementById('chart-irl-radar'), {
-    type: 'radar',
-    data: {
-      labels: IRL_DIMS,
-      datasets: [{
-        label: 'Promedio portafolio (IRL 1–9)',
-        data: avgVals,
-        backgroundColor: 'rgba(111,132,214,.20)',
-        borderColor: '#8fa3e8', borderWidth: 2,
-        pointBackgroundColor: '#8fa3e8', pointRadius: 4, spanGaps: false
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: { r: { min:0, max:9, ticks:{stepSize:1, font:{size:9}}, grid:{color:'rgba(148,163,213,.14)'}, pointLabels:{font:{family:'Inter',size:12, weight:'bold'}} } },
-      plugins: { legend: { position:'bottom', labels:{font:{family:'Inter',size:11}, boxWidth:12} } }
-    }
-  });
+  // --- Profundidad del freno por dimensión (F4.1) ---
+  destroyChart('chart-irl-profundidad');
+  const profCanvas = document.getElementById('chart-irl-profundidad');
+  if (profCanvas) {
+    const bucket = (d, lo, hi) => portfolio.filter(r => r.irl && r.irl[d] != null && r.irl[d] >= lo && r.irl[d] <= hi).length;
+    charts['chart-irl-profundidad'] = new Chart(profCanvas, {
+      type: 'bar',
+      data: { labels: IRL_DIMS, datasets: [
+        { label: '≤ 2 · crítico', data: IRL_DIMS.map(d => bucket(d, 1, 2)), backgroundColor: '#e2685a', borderColor: '#101a33', borderWidth: 2, borderRadius: 3 },
+        { label: '3–4 · en desarrollo', data: IRL_DIMS.map(d => bucket(d, 3, 4)), backgroundColor: '#b78829', borderColor: '#101a33', borderWidth: 2, borderRadius: 3 },
+        { label: '≥ 5 · avanzado', data: IRL_DIMS.map(d => bucket(d, 5, 9)), backgroundColor: '#00a297', borderColor: '#101a33', borderWidth: 2, borderRadius: 3 }
+      ]},
+      options: { responsive: true, maintainAspectRatio: false,
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' } } },
+                  y: { stacked: true, beginAtZero: true, ticks: { stepSize: 5 }, grid: { color: 'rgba(148,163,213,.09)' } } },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 10.5 }, boxWidth: 10, padding: 8 } } }
+      }
+    });
+  }
 
   // --- Barra: frecuencia del eslabón más débil ---
   const weakCounts = {}; IRL_DIMS.forEach(d => weakCounts[d] = 0);
