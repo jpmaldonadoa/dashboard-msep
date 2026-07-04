@@ -329,6 +329,15 @@ tailwind.config = {
     <div id="sie-regiones" class="mt-4 flex flex-wrap gap-2"></div>
   </section>
 
+  <!-- Solicitudes de articulación (Fase 4 — cualitativos GIF/B2B) -->
+  <section id="articulacion-sec" class="mt-6 hidden">
+    <div class="flex items-baseline justify-between mb-3">
+      <h3 class="font-headline font-bold text-lg text-primary">Solicitudes de articulación</h3>
+      <span class="text-[11px] text-outline uppercase tracking-widest">proyectos que piden conexión GIF o B2B</span>
+    </div>
+    <div id="articulacion-list" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+  </section>
+
   <!-- TENDENCIA + MOVERS (F1.5) -->
   <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
     <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl">
@@ -1044,6 +1053,12 @@ function normalizeRow(row) {
     hitoEstrategia:      col('Hito estrategia mercado') || '',
     hitoImplementacion:  col('Hito implementación productiva','Hito implementacion productiva') || '',
     hitoCertificacion:   col('Hito certificación','Hito certificacion') || '',
+    // Fase 4 — cualitativos de articulación/impacto
+    gif:              col('Conexión GIF') || '',
+    paises:           col('Países de aterrizaje','Paises de aterrizaje') || '',
+    infra:            col('Infraestructura habilitada') || '',
+    b2b:              col('Alianzas B2B') || '',
+    feedbackNPS:      col('Feedback NPS') || '',
     irl: {
       CRL:  n(r['IRL CRL']),
       TRL:  n(r['IRL TRL']),
@@ -1350,6 +1365,26 @@ function renderDashboard() {
         ? Object.entries(regCounts).sort((a, b) => b[1] - a[1]).map(([k, v]) =>
             `<span class="px-2 py-0.5 rounded-full text-[11px] bg-slate-100 text-slate-700">${esc(k)} <b style="font-family:'IBM Plex Mono',monospace">${v}</b></span>`).join('')
         : '<span class="text-[11px] text-outline">Sin dato de región en el consolidado — se poblará cuando el formulario capture la capa SIE.</span>';
+    }
+    // Solicitudes de articulación (Fase 4): proyectos que piden GIF o B2B
+    const sec = document.getElementById('articulacion-sec');
+    const list = document.getElementById('articulacion-list');
+    if (sec && list) {
+      const pedidos = portfolio.filter(r => r.gif || r.b2b);
+      if (pedidos.length) {
+        sec.classList.remove('hidden');
+        list.innerHTML = pedidos.map(r => {
+          const badges = [r.gif ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold" style="background:#0e4f4a;color:#7fe0d6">GIF</span>' : '',
+                          r.b2b ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold" style="background:#24408f;color:#b9c6f0">B2B</span>' : ''].join(' ');
+          const detalle = esc(r.b2b || r.gif);
+          return `<div class="senal-item" style="cursor:pointer" onclick="irAFicha(${portfolio.indexOf(r)})">
+            <span class="nm text-on-surface">${esc(r.empresa || r.codigo)}</span>
+            <span class="shrink-0 flex items-center gap-1">${badges}</span>
+            <span class="rz">${detalle}</span></div>`;
+        }).join('');
+      } else {
+        sec.classList.add('hidden');
+      }
     }
   })();
 
@@ -2198,6 +2233,21 @@ function renderFicha() {
         ${hitoRow('Estrategia de introducción al mercado', r.hitoEstrategia)}
         ${hitoRow('Implementación productiva del proceso', r.hitoImplementacion)}
         ${hitoRow('Certificación o aprobación regulatoria', r.hitoCertificacion)}
+      </div>
+    </div>` : ''}
+
+    <!-- Articulación y requerimientos (Fase 4 — cualitativos) -->
+    ${(r.gif || r.paises || r.infra || r.b2b || r.feedbackNPS) ? `
+    <div class="bg-surface-container-lowest p-8 rounded-xl">
+      <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100 flex items-center gap-2">
+        <span class="material-symbols-outlined">hub</span>Articulación y requerimientos
+      </h3>
+      <div class="space-y-3">
+        ${dataRow('Conexión GIF',            r.gif)}
+        ${dataRow('Alianzas B2B',            r.b2b)}
+        ${dataRow('Países de aterrizaje',    r.paises)}
+        ${dataRow('Infraestructura habilitada', r.infra)}
+        ${dataRow('Feedback sobre el ejecutivo', r.feedbackNPS)}
       </div>
     </div>` : ''}
 
