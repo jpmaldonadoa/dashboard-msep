@@ -288,14 +288,30 @@ tailwind.config = {
       <h3 class="font-headline font-bold text-lg text-primary">Talento, impacto y territorio</h3>
       <span class="text-[11px] text-outline uppercase tracking-widest">indicadores SIE de cartera</span>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
       <div class="bg-surface-container-lowest p-5 rounded-xl border-l-4 border-secondary">
-        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de doctores declarados en los proyectos">Doctores en cartera</p>
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de trabajadores vinculados a los proyectos">Dotación en cartera</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-dotacion" class="text-3xl font-bold font-headline text-primary">—</span><span class="text-on-surface-variant text-xs">personas</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de doctores declarados en los proyectos">Doctores</p>
         <div class="flex items-baseline gap-2"><span id="kpi-doctores" class="text-3xl font-bold font-headline text-primary">—</span><span class="text-on-surface-variant text-xs">personas</span></div>
       </div>
       <div class="bg-surface-container-lowest p-5 rounded-xl">
         <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de profesionales técnicos especializados">Personal especializado</p>
         <div class="flex items-baseline gap-2"><span id="kpi-personal" class="text-3xl font-bold font-headline text-primary">—</span><span class="text-on-surface-variant text-xs">personas</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl border-l-4" style="border-left-color:#e2685a">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma del gasto en I+D declarado en el periodo (CLP)">Gasto I+D</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-gasto" class="text-2xl font-bold font-headline text-primary">—</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Gasto I+D / Monto total de la cartera">Intensidad I+D</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-intensidad" class="text-3xl font-bold font-headline text-primary">—</span><span class="text-on-surface-variant text-xs">del monto</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-xl">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Publicaciones, datasets o contribuciones a estándares">Outputs de conocimiento</p>
+        <div class="flex items-baseline gap-2"><span id="kpi-outputs" class="text-3xl font-bold font-headline text-primary">—</span></div>
       </div>
       <div class="bg-surface-container-lowest p-5 rounded-xl">
         <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2" title="Suma de ahorros acumulados declarados (CLP)">Ahorros acumulados</p>
@@ -1020,6 +1036,10 @@ function normalizeRow(row) {
     estadoPrototipo:  col('Estado del prototipo') || '',
     validacionReal:   col('Validación datos reales','Validacion datos reales') || '',
     partners:         col('Partners tecnológicos','Partners tecnologicos') || '',
+    // Fase 2 — KPIs SIE cuantitativos directos
+    gastoID:          col('Gasto I+D') || '',
+    dotacion:         n(col('Dotación total','Dotacion total')),
+    outputs:          n(col('Outputs de conocimiento')),
     irl: {
       CRL:  n(r['IRL CRL']),
       TRL:  n(r['IRL TRL']),
@@ -1294,12 +1314,18 @@ function renderDashboard() {
     const fmtCLP = v => 'CLP ' + Math.round(v).toLocaleString('es-CL');
     const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     const sumInt = k => portfolio.reduce((s, r) => s + (r[k] || 0), 0);
-    const hasDoc = portfolio.some(r => r.doctores != null);
-    const hasEsp = portfolio.some(r => r.personalEsp != null);
-    setTxt('kpi-doctores', hasDoc ? sumInt('doctores') : '—');
-    setTxt('kpi-personal', hasEsp ? sumInt('personalEsp') : '—');
+    const some = k => portfolio.some(r => r[k] != null);
+    setTxt('kpi-dotacion', some('dotacion') ? sumInt('dotacion') : '—');
+    setTxt('kpi-doctores', some('doctores') ? sumInt('doctores') : '—');
+    setTxt('kpi-personal', some('personalEsp') ? sumInt('personalEsp') : '—');
+    setTxt('kpi-outputs', some('outputs') ? sumInt('outputs') : '—');
     const ahorrosTot = portfolio.reduce((s, r) => s + money(r.ahorros), 0);
     setTxt('kpi-ahorros', ahorrosTot > 0 ? fmtCLP(ahorrosTot) : '—');
+    // Gasto I+D e intensidad I+D (gasto / monto total de la cartera)
+    const gastoTot = portfolio.reduce((s, r) => s + money(r.gastoID), 0);
+    const montoTot = portfolio.reduce((s, r) => s + money(r.montoTotal), 0);
+    setTxt('kpi-gasto', gastoTot > 0 ? fmtCLP(gastoTot) : '—');
+    setTxt('kpi-intensidad', (gastoTot > 0 && montoTot > 0) ? (100 * gastoTot / montoTot).toFixed(1) + '%' : '—');
     const npsVals = portfolio.map(r => r.nps).filter(v => v != null);
     const npsEl = document.getElementById('kpi-nps'), npsSub = document.getElementById('kpi-nps-sub');
     if (npsEl) {
@@ -2131,7 +2157,7 @@ function renderFicha() {
     </div>
 
     <!-- Talento, impacto y territorio (Fase 1 — capa SIE) -->
-    ${(r.regionEjec || r.regionImpacto || r.doctores != null || r.personalEsp != null || r.ahorros || r.nps != null) ? `
+    ${(r.regionEjec || r.regionImpacto || r.doctores != null || r.personalEsp != null || r.dotacion != null || r.ahorros || r.gastoID || r.outputs != null || r.nps != null) ? `
     <div class="bg-surface-container-lowest p-8 rounded-xl">
       <h3 class="font-headline font-bold text-primary mb-4 pb-4 border-b border-slate-100 flex items-center gap-2">
         <span class="material-symbols-outlined">groups</span>Talento, impacto y territorio
@@ -2140,11 +2166,14 @@ function renderFicha() {
         <div class="space-y-3">
           ${dataRow('Región ejecución',  r.regionEjec)}
           ${dataRow('Región impacto',    r.regionImpacto)}
+          ${dataRow('Gasto I+D (periodo)', r.gastoID)}
           ${dataRow('Ahorros acumulados', r.ahorros)}
         </div>
         <div class="space-y-3">
+          ${dataRow('Dotación total',    r.dotacion != null ? String(r.dotacion) : '')}
           ${dataRow('Doctores en el proyecto', r.doctores != null ? String(r.doctores) : '')}
           ${dataRow('Personal especializado',  r.personalEsp != null ? String(r.personalEsp) : '')}
+          ${dataRow('Outputs de conocimiento', r.outputs != null ? String(r.outputs) : '')}
           ${dataRow('Satisfacción NPS ejecutivo', r.nps != null ? r.nps + ' / 10' : '')}
         </div>
       </div>
